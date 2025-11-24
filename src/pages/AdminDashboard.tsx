@@ -55,6 +55,8 @@ type ChartDatum = {
 type ChartBuilderInput = {
   revenueSeries?: Array<{ month?: string; amount?: number; total?: number }>;
   bookingsSeries?: Array<{ month?: string; count?: number; total?: number }>;
+  usersSeries?: Array<{ month?: string; count?: number }>;
+  propertiesSeries?: Array<{ month?: string; count?: number }>;
   totals: { users: number; properties: number; bookings: number; revenue: number };
 };
 
@@ -112,9 +114,11 @@ const distributeValue = (total: number, length: number, index: number) => {
   return Math.max(0, Math.round(base + variation));
 };
 
-const buildChartData = ({ revenueSeries, bookingsSeries, totals }: ChartBuilderInput): ChartDatum[] => {
+const buildChartData = ({ revenueSeries, bookingsSeries, usersSeries, propertiesSeries, totals }: ChartBuilderInput): ChartDatum[] => {
   const revenueMap = new Map<string, number>();
   const bookingsMap = new Map<string, number>();
+  const usersMap = new Map<string, number>();
+  const propertiesMap = new Map<string, number>();
 
   if (Array.isArray(revenueSeries)) {
     revenueSeries.forEach((item, idx) => {
@@ -130,30 +134,58 @@ const buildChartData = ({ revenueSeries, bookingsSeries, totals }: ChartBuilderI
     });
   }
 
-  const months =
-    Array.isArray(revenueSeries) && revenueSeries.length > 0
-      ? revenueSeries.map((item, idx) => ({
-          key: normalizeMonthKey(item?.month, idx),
-          label: formatMonthLabel(item?.month, idx),
-        }))
-      : Array.isArray(bookingsSeries) && bookingsSeries.length > 0
-      ? bookingsSeries.map((item, idx) => ({
-          key: normalizeMonthKey(item?.month, idx),
-          label: formatMonthLabel(item?.month, idx),
-        }))
-      : createFallbackMonths();
+  if (Array.isArray(usersSeries)) {
+    usersSeries.forEach((item, idx) => {
+      const key = normalizeMonthKey(item?.month, idx);
+      usersMap.set(key, Number(item?.count ?? 0));
+    });
+  }
+
+  if (Array.isArray(propertiesSeries)) {
+    propertiesSeries.forEach((item, idx) => {
+      const key = normalizeMonthKey(item?.month, idx);
+      propertiesMap.set(key, Number(item?.count ?? 0));
+    });
+  }
+
+  // Collect all unique months from all series
+  const allMonthsSet = new Set<string>();
+  [revenueSeries, bookingsSeries, usersSeries, propertiesSeries].forEach(series => {
+    if (Array.isArray(series)) {
+      series.forEach((item, idx) => {
+        allMonthsSet.add(normalizeMonthKey(item?.month, idx));
+      });
+    }
+  });
+
+  // Create months array - prefer actual data, fallback to last 6 months if no data
+  let months: Array<{ key: string; label: string }>;
+  if (allMonthsSet.size > 0) {
+    // Sort months chronologically
+    const sortedMonths = Array.from(allMonthsSet).sort();
+    months = sortedMonths.map((key, idx) => {
+      // Find the original month string from any series
+      const originalMonth = 
+        revenueSeries?.find((_, i) => normalizeMonthKey(revenueSeries[i]?.month, i) === key)?.month ||
+        bookingsSeries?.find((_, i) => normalizeMonthKey(bookingsSeries[i]?.month, i) === key)?.month ||
+        usersSeries?.find((_, i) => normalizeMonthKey(usersSeries[i]?.month, i) === key)?.month ||
+        propertiesSeries?.find((_, i) => normalizeMonthKey(propertiesSeries[i]?.month, i) === key)?.month ||
+        key;
+      return {
+        key,
+        label: formatMonthLabel(originalMonth, idx),
+      };
+    });
+  } else {
+    months = createFallbackMonths();
+  }
 
   return months.map((month, idx) => {
-    const bookingsVal =
-      bookingsMap.get(month.key) ?? distributeValue(totals.bookings, months.length, idx);
-    const revenueVal =
-      revenueMap.get(month.key) ?? distributeValue(totals.revenue, months.length, idx);
-    const propertiesVal = distributeValue(
-      Math.max(totals.properties, totals.bookings),
-      months.length,
-      idx
-    );
-    const usersVal = distributeValue(Math.max(totals.users, totals.bookings), months.length, idx);
+    // Use actual data from maps, only fallback to distribution if no data exists
+    const bookingsVal = bookingsMap.get(month.key) ?? 0;
+    const revenueVal = revenueMap.get(month.key) ?? 0;
+    const propertiesVal = propertiesMap.get(month.key) ?? 0;
+    const usersVal = usersMap.get(month.key) ?? 0;
 
     return {
       name: month.label,
@@ -238,8 +270,10 @@ export default function AdminDashboard() {
     try {
       const [profileRes, propsRes] = await Promise.all([
         usersApi.getProfile(),
-        propertiesApi.list({ page: 1, limit: 500 }),
+        propertiesApi.list({ page: 1, limit: 1000 }), // Increased limit to ensure we get all properties
       ]);
+      
+      console.log('[AdminDashboard] API response properties count:', (propsRes as any)?.properties?.length || 0);
 
       if (!profileRes || String((profileRes as any).role || '').toLowerCase() !== 'admin') {
         navigate('/dashboard');
@@ -251,6 +285,8 @@ export default function AdminDashboard() {
       const allProperties = Array.isArray((propsRes as any)?.properties)
         ? ((propsRes as any).properties as any[])
         : [];
+
+      console.log('[AdminDashboard] Total properties fetched from API:', allProperties.length);
 
       const orderedProperties = allProperties
         .slice()
@@ -264,18 +300,59 @@ export default function AdminDashboard() {
           return right - left;
         });
 
-      setPendingProperties(orderedProperties.filter((item: any) => !item?.is_approved));
-      setRecentProperties(orderedProperties.slice(0, 5));
-
+      // Helper function to check if property is approved (handles different formats)
+      const isApprovedCheck = (item: any): boolean => {
+        // Check moderationStatus first (new field from backend)
+        if (item.moderationStatus) {
+          return String(item.moderationStatus).toLowerCase() === 'approved';
+        }
+        // Check approvedAt field - if it exists, property is approved
+        if (item.approvedAt) {
+          return true;
+        }
+        // Fallback to is_approved field
+        return item.is_approved === true || 
+               item.is_approved === 1 || 
+               item.is_approved === '1' || 
+               String(item.is_approved).toLowerCase() === 'true' ||
+               item.status === 'approved';
+      };
+      
+      // Count only approved properties for the stat card
+      const approvedProperties = orderedProperties.filter((item: any) => isApprovedCheck(item));
+      console.log('[AdminDashboard] Approved properties count:', approvedProperties.length);
+      console.log('[AdminDashboard] Approved properties details:', approvedProperties.map(p => ({
+        id: p.id,
+        title: p.title,
+        moderationStatus: p.moderationStatus,
+        is_approved: p.is_approved,
+        status: p.status
+      })));
+      
+      setPendingProperties(orderedProperties.filter((item: any) => !isApprovedCheck(item)));
+      // Show only approved properties in recent properties section
+      const recentApprovedProperties = approvedProperties.slice(0, 5);
+      console.log('[AdminDashboard] Recent approved properties to display:', recentApprovedProperties.length);
+      console.log('[AdminDashboard] Recent properties owner data:', recentApprovedProperties.map(p => ({
+        id: p.id,
+        title: p.title,
+        owner: p.owner,
+        profiles: p.profiles,
+        agentId: p.agentId
+      })));
+      setRecentProperties(recentApprovedProperties);
+      
       let totalsPayload = {
         users: 0,
-        properties: orderedProperties.length,
+        properties: approvedProperties.length,
         bookings: 0,
         revenue: 0,
       };
 
       let revenueSeries: ChartBuilderInput['revenueSeries'];
       let bookingsSeries: ChartBuilderInput['bookingsSeries'];
+      let usersSeries: Array<{ month: string; count: number }> = [];
+      let propertiesSeries: Array<{ month: string; count: number }> = [];
 
       // Try to get analytics data
       const analyticsRes: any = await adminUsersApi.analytics().catch(() => null);
@@ -286,40 +363,96 @@ export default function AdminDashboard() {
         paymentsApi.list({ limit: 2000 }).catch(() => null),
         bookingsApi.list({ page: 1, limit: 2000, all: 'true' }).catch(() => null),
         adminBookingsApi.list({ page: 1, limit: 2000 }).catch(() => null),
-        adminUsersApi.list({ page: 1, limit: 1 }).catch(() => null),
+        adminUsersApi.list({ page: 1, limit: 10000 }).catch(() => null),
       ]);
 
-      // Calculate revenue
-      totalsPayload.revenue =
-        paymentsRes?.payments?.reduce(
-          (sum: number, payment: any) => sum + (Number(payment.amount) || 0),
-          0
-        ) || 0;
+      // Calculate revenue and group by month
+      const payments = paymentsRes?.payments || [];
+      totalsPayload.revenue = payments.reduce(
+        (sum: number, payment: any) => sum + (Number(payment.amount) || 0),
+        0
+      );
 
-      // Get bookings count - try multiple sources
-      const bookingsFromRegular = bookingsRes?.data?.bookings?.length || 0;
+      // Group revenue by month
+      const revenueByMonthMap = new Map<string, number>();
+      payments.forEach((payment: any) => {
+        const date = payment.created_at || payment.createdAt || payment.date;
+        if (date) {
+          const monthKey = format(new Date(date), 'yyyy-MM');
+          const current = revenueByMonthMap.get(monthKey) || 0;
+          revenueByMonthMap.set(monthKey, current + (Number(payment.amount) || 0));
+        }
+      });
+      revenueSeries = Array.from(revenueByMonthMap.entries()).map(([month, amount]) => ({
+        month,
+        amount,
+        total: amount,
+      }));
+
+      // Get bookings and group by month
+      const bookingsFromRegular = bookingsRes?.data?.bookings || [];
       const adminBookingsResAny = adminBookingsRes as any;
       const bookingsResAny = bookingsRes as any;
-      const bookingsFromAdmin = adminBookingsResAny?.bookings?.length || 0;
-      const bookingsFromPagination = adminBookingsResAny?.pagination?.total || bookingsResAny?.pagination?.total;
-      totalsPayload.bookings = bookingsFromPagination 
-        ? Number(bookingsFromPagination) 
-        : Math.max(bookingsFromAdmin, bookingsFromRegular);
-
-      // Get users count - try pagination first, then fetch all
-      const usersResAny = usersRes as any;
-      if (usersResAny?.pagination?.total !== undefined) {
-        totalsPayload.users = Number(usersResAny.pagination.total);
-      } else {
-        // Fallback: fetch all users to count them
-        try {
-          const allUsersRes: any = await adminUsersApi.list({ page: 1, limit: 10000 }).catch(() => null);
-          totalsPayload.users = allUsersRes?.users?.length || 0;
-        } catch (e) {
-          console.error('Failed to fetch user count', e);
-          totalsPayload.users = 0;
+      const bookingsFromAdmin = adminBookingsResAny?.bookings || [];
+      const allBookings = [...bookingsFromAdmin, ...bookingsFromRegular];
+      
+      // Remove duplicates by ID
+      const uniqueBookings = Array.from(
+        new Map(allBookings.map((b: any) => [b.id, b])).values()
+      );
+      
+      totalsPayload.bookings = uniqueBookings.length;
+      
+      // Group bookings by month
+      const bookingsByMonthMap = new Map<string, number>();
+      uniqueBookings.forEach((booking: any) => {
+        const date = booking.created_at || booking.createdAt || booking.date || booking.booking_date;
+        if (date) {
+          const monthKey = format(new Date(date), 'yyyy-MM');
+          const current = bookingsByMonthMap.get(monthKey) || 0;
+          bookingsByMonthMap.set(monthKey, current + 1);
         }
-      }
+      });
+      bookingsSeries = Array.from(bookingsByMonthMap.entries()).map(([month, count]) => ({
+        month,
+        count,
+        total: count,
+      }));
+
+      // Get users count and group by month
+      const usersResAny = usersRes as any;
+      const allUsers = usersResAny?.users || [];
+      totalsPayload.users = allUsers.length;
+
+      // Group users by month
+      const usersByMonthMap = new Map<string, number>();
+      allUsers.forEach((user: any) => {
+        const date = user.created_at || user.createdAt || user.created;
+        if (date) {
+          const monthKey = format(new Date(date), 'yyyy-MM');
+          const current = usersByMonthMap.get(monthKey) || 0;
+          usersByMonthMap.set(monthKey, current + 1);
+        }
+      });
+      usersSeries = Array.from(usersByMonthMap.entries()).map(([month, count]) => ({
+        month,
+        count,
+      }));
+
+      // Group approved properties by month
+      const propertiesByMonthMap = new Map<string, number>();
+      approvedProperties.forEach((property: any) => {
+        const date = property.created_at || property.createdAt || property.created;
+        if (date) {
+          const monthKey = format(new Date(date), 'yyyy-MM');
+          const current = propertiesByMonthMap.get(monthKey) || 0;
+          propertiesByMonthMap.set(monthKey, current + 1);
+        }
+      });
+      propertiesSeries = Array.from(propertiesByMonthMap.entries()).map(([month, count]) => ({
+        month,
+        count,
+      }));
 
       // Use analytics data if available and values are non-zero, otherwise use direct API data
       if (analyticsData) {
@@ -328,19 +461,31 @@ export default function AdminDashboard() {
         const analyticsRevenue = Number(analyticsData.revenue || 0);
         
         // Use analytics values if they're greater than 0, otherwise use direct API values
+        // For properties, always use approved count (not total from analytics)
         totalsPayload = {
           users: analyticsUsers > 0 ? analyticsUsers : totalsPayload.users,
-          properties: Number(analyticsData.totalProperties || orderedProperties.length || 0),
+          properties: approvedProperties.length, // Always count only approved properties
           bookings: analyticsBookings > 0 ? analyticsBookings : totalsPayload.bookings,
           revenue: analyticsRevenue > 0 ? analyticsRevenue : totalsPayload.revenue,
         };
         
-        revenueSeries = Array.isArray(analyticsData.revenueByMonth) ? analyticsData.revenueByMonth : undefined;
-        bookingsSeries = Array.isArray(analyticsData.bookingsByMonth) ? analyticsData.bookingsByMonth : undefined;
+        // Prefer analytics monthly data if available
+        if (Array.isArray(analyticsData.revenueByMonth) && analyticsData.revenueByMonth.length > 0) {
+          revenueSeries = analyticsData.revenueByMonth;
+        }
+        if (Array.isArray(analyticsData.bookingsByMonth) && analyticsData.bookingsByMonth.length > 0) {
+          bookingsSeries = analyticsData.bookingsByMonth;
+        }
       }
 
       setTotals(totalsPayload);
-      setChartData(buildChartData({ revenueSeries, bookingsSeries, totals: totalsPayload }));
+      setChartData(buildChartData({ 
+        revenueSeries, 
+        bookingsSeries, 
+        usersSeries,
+        propertiesSeries,
+        totals: totalsPayload 
+      }));
       setLastRefresh(new Date().toISOString());
     } catch (error) {
       console.error('Failed to load admin dashboard data', error);
@@ -362,28 +507,77 @@ export default function AdminDashboard() {
     loadData(true);
   }, [user, navigate]);
 
+  // Helper function to check if property is approved (handles different formats)
+  const isPropertyApproved = (property: any): boolean => {
+    // Check moderationStatus first (new field from backend)
+    if (property.moderationStatus) {
+      return String(property.moderationStatus).toLowerCase() === 'approved';
+    }
+    // Fallback to is_approved field
+    return property.is_approved === true || 
+           property.is_approved === 1 || 
+           property.is_approved === '1' || 
+           String(property.is_approved).toLowerCase() === 'true' ||
+           property.status === 'approved';
+  };
+
   const handleApproval = async (propertyId: string | number, approve: boolean) => {
     setActionLoading((prev) => ({ ...prev, [propertyId]: true }));
     try {
+      let response;
       if (approve) {
-        await adminListingsApi.approve(propertyId as any);
+        response = await adminListingsApi.approve(propertyId as any);
       } else {
-        await adminListingsApi.decline(propertyId as any);
+        response = await adminListingsApi.decline(propertyId as any);
       }
 
-      setPendingProperties((prev) => prev.filter((item) => item.id !== propertyId));
-      setRecentProperties((prev) =>
-        prev
-          .map((item) =>
-            item.id === propertyId ? { ...item, is_approved: approve ? 1 : item.is_approved } : item
-          )
-          .filter((item) => (approve ? true : item.id !== propertyId))
-      );
+      // Log response for debugging
+      console.log(`${approve ? 'Approve' : 'Decline'} response:`, response);
 
-      await loadData(false);
+      // Update local state with the property object from response if available
+      const responseAny = response as any;
+      if (responseAny?.property) {
+        const updatedProperty = responseAny.property;
+        console.log('Updated property from response:', updatedProperty);
+        
+        // Update pending properties - remove if approved, update if declined
+        setPendingProperties((prev) => {
+          if (approve) {
+            return prev.filter((item) => item.id !== propertyId);
+          } else {
+            return prev.map((item) =>
+              item.id === propertyId ? { ...item, ...updatedProperty } : item
+            );
+          }
+        });
+
+        // Update recent properties with the updated property object
+        setRecentProperties((prev) =>
+          prev.map((item) =>
+            item.id === propertyId ? { ...item, ...updatedProperty } : item
+          )
+        );
+      } else {
+        // Fallback: update manually if response doesn't have property object
+        setPendingProperties((prev) => prev.filter((item) => item.id !== propertyId));
+        setRecentProperties((prev) =>
+          prev
+            .map((item) =>
+              item.id === propertyId ? { ...item, is_approved: approve ? 1 : item.is_approved, status: approve ? 'approved' : 'declined' } : item
+            )
+            .filter((item) => (approve ? true : item.id !== propertyId))
+        );
+      }
+
+      // Only reload if we didn't get the property from response
+      if (!responseAny?.property) {
+        await loadData(false);
+      }
     } catch (err: any) {
       console.error('Approval update failed', err);
       alert('Failed to update listing approval: ' + (err?.message || 'Unknown error'));
+      // Reload on error to get fresh data
+      await loadData(false);
     } finally {
       setActionLoading((prev) => {
         const next = { ...prev };
@@ -420,7 +614,7 @@ export default function AdminDashboard() {
         id: 'users',
         label: 'Total Users',
         value: totals.users,
-        gradient: 'from-sky-500 to-blue-600',
+        gradient: 'from-sky-500 to-dark-blue-500',
         icon: Users,
         delta: statTrends.users,
         formatter: (v: number) => v.toLocaleString(),
@@ -447,7 +641,7 @@ export default function AdminDashboard() {
         id: 'revenue',
         label: 'Revenue',
         value: totals.revenue,
-        gradient: 'from-indigo-500 to-indigo-600',
+        gradient: 'from-indigo-500 to-dark-blue-600',
         icon: DollarSign,
         delta: statTrends.revenue,
         formatter: (v: number) => `$${formatPrice(v)}`,
@@ -479,9 +673,9 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="min-h-screen pt-24 flex items-center justify-center bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -496,27 +690,27 @@ export default function AdminDashboard() {
   const pendingCount = pendingProperties.length;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <AdminSidebar />
-      <div className="flex-1 ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-8 text-white shadow-2xl">
+      <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-dark-blue-500 via-dark-blue-600 to-violet-600 p-4 sm:p-6 lg:p-8 text-white shadow-2xl">
           <div className="absolute -top-24 right-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-0 hidden h-40 w-40 rounded-full bg-white/10 blur-2xl lg:block" />
 
-          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white/90">
-                <ShieldCheck className="h-4 w-4" />
-                Admin Control Center
+          <div className="relative z-10 flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-2 sm:px-3 py-1 text-xs font-medium uppercase tracking-wide text-white/90">
+                <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-xs">Admin Control Center</span>
               </span>
-              <h1 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">
+              <h1 className="mt-3 sm:mt-4 text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold text-white">
                 Welcome back, {profile?.name || 'Admin'}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm text-white/80">
+              <p className="mt-2 sm:mt-3 max-w-2xl text-xs sm:text-sm text-white/80">
                 Monitor platform performance, moderate incoming listings, and keep the marketplace healthy in one place.
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-4">
+              <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2 sm:gap-4">
                 <button
                   onClick={() => loadData(false)}
                   disabled={refreshing}
@@ -535,7 +729,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
-            <div className="flex w-full max-w-xs flex-col gap-2 rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
+            <div className="flex w-full lg:max-w-xs flex-col gap-2 rounded-xl sm:rounded-2xl bg-white/15 p-3 sm:p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between text-xs font-medium text-white/80">
                 <span>Moderation summary</span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-[10px] uppercase tracking-wide">
@@ -543,15 +737,15 @@ export default function AdminDashboard() {
                   live
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span>Pending approvals</span>
                 <span className="font-semibold">{pendingCount}</span>
               </div>
-              <div className="flex items-center justify-between text-sm text-white/90">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-white/90">
                 <span>Revenue YTD</span>
-                <span>Tsh {formatPrice(totals.revenue)}</span>
+                <span className="text-xs sm:text-sm">Tsh {formatPrice(totals.revenue)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm text-white/90">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-white/90">
                 <span>Bookings</span>
                 <span>{totals.bookings.toLocaleString()}</span>
               </div>
@@ -559,7 +753,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
           {statCards.map((card) => {
             const Icon = card.icon;
             const displayValue = card.formatter
@@ -569,41 +763,41 @@ export default function AdminDashboard() {
             return (
               <div
                 key={card.id}
-                className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${card.gradient} p-6 text-white shadow-xl transition hover:shadow-2xl`}
+                className={`relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-br ${card.gradient} p-4 sm:p-6 text-white shadow-xl transition hover:shadow-2xl`}
               >
-                <div className="mb-5 flex items-center justify-between">
-                  <div className="rounded-xl bg-white/20 p-3 backdrop-blur-sm">
-                    <Icon className="h-7 w-7" />
+                <div className="mb-4 sm:mb-5 flex items-center justify-between">
+                  <div className="rounded-lg sm:rounded-xl bg-white/20 p-2 sm:p-3 backdrop-blur-sm">
+                    <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                   </div>
                   <div className="flex flex-col items-end text-xs font-semibold text-white/80">
                     <span className="flex items-center gap-1">
                       <ArrowUpRight
-                        className={`h-4 w-4 ${positive ? '' : 'rotate-180 opacity-90'}`}
+                        className={`h-3 w-3 sm:h-4 sm:w-4 ${positive ? '' : 'rotate-180 opacity-90'}`}
                       />
                       {Math.abs(card.delta)}%
                     </span>
-                    <span className="text-[10px] uppercase tracking-wide text-white/60">
+                    <span className="text-[10px] uppercase tracking-wide text-white/60 hidden sm:block">
                       vs last month
                     </span>
                   </div>
                 </div>
-                <div className="text-sm text-white/70">{card.label}</div>
-                <div className="mt-1 text-3xl font-bold">{displayValue}</div>
+                <div className="text-xs sm:text-sm text-white/70">{card.label}</div>
+                <div className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold">{displayValue}</div>
               </div>
             );
           })}
         </div>
 
-        <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
-          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-xl">
+          <div className="mb-4 sm:mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Performance overview</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Performance overview</h2>
+              <p className="text-xs sm:text-sm text-gray-500">
                 Combined view of marketplace momentum over the past months.
               </p>
             </div>
           </div>
-          <div className="h-80">
+          <div className="h-64 sm:h-80 overflow-x-auto">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartDataset} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -638,29 +832,34 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
-            <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-6 sm:space-y-8">
+          <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-xl">
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Recent properties</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Recent properties</h2>
+                <p className="text-xs sm:text-sm text-gray-500">
                   The five most recent listings submitted to the platform.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/admin/properties')}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-500 hover:text-blue-600"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition hover:border-light-blue-500 hover:text-dark-blue-500"
               >
                 Manage all
-                <ArrowUpRight className="h-4 w-4" />
+                <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
 
             {recentProperties.length ? (
               <div className="space-y-4">
                 {recentProperties.map((property) => {
+                  // Check moderationStatus first, then fallback to other fields
                   const rawStatus =
-                    property?.is_approved ?? property?.approved ?? property?.status ?? 'pending';
+                    property?.moderationStatus ?? 
+                    property?.is_approved ?? 
+                    property?.approved ?? 
+                    property?.status ?? 
+                    'pending';
                   const normalizedStatus = (() => {
                     const str = String(rawStatus).toLowerCase();
                     if (str === 'true' || str === 'approved' || str === '1') return 'approved';
@@ -675,32 +874,30 @@ export default function AdminDashboard() {
                       ? 'bg-rose-50 text-rose-600'
                       : 'bg-amber-50 text-amber-700';
                   const ownerName =
-                    property?.profiles?.full_name ||
-                    property?.profiles?.name ||
-                    (property?.owner && typeof property.owner === 'object'
-                      ? property.owner.full_name || property.owner.name
-                      : property?.owner) ||
+                    (property?.agent && typeof property.agent === 'object' ? (property.agent.name || property.agent.full_name) : property?.agent) ||
+                    (property?.profiles?.full_name) || 
+                    (property.owner && typeof property.owner === 'object' ? (property.owner.name || property.owner.full_name) : property.owner) || 
                     'N/A';
                   const processing = Boolean(actionLoading[property.id]);
 
                   return (
                     <div
                       key={property.id}
-                      className="flex flex-col gap-5 rounded-2xl border border-gray-100 p-5 transition hover:border-blue-200 hover:shadow-lg md:flex-row"
+                      className="flex flex-col gap-4 sm:gap-5 rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5 transition hover:border-blue-200 hover:shadow-lg md:flex-row"
                     >
-                      <div className="w-full overflow-hidden rounded-xl bg-gray-100 md:w-40">
+                      <div className="w-full overflow-hidden rounded-lg sm:rounded-xl bg-gray-100 md:w-40 flex-shrink-0">
                         <img
                           src={resolveImageUrl(property)}
                           alt={property.title}
-                          className="h-40 w-full object-cover"
+                          className="h-32 sm:h-40 w-full object-cover cursor-pointer"
                           onClick={() => goToProperty(property.id)}
                         />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-500">
-                              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-600">
+                              <span className="rounded-full bg-light-blue-50 px-2 py-0.5 text-dark-blue-500">
                                 {property.listing_type === 'buy'
                                   ? 'For Sale'
                                   : property.listing_type === 'rent'
@@ -714,12 +911,12 @@ export default function AdminDashboard() {
                                 {normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)}
                               </span>
                             </div>
-                            <h3 className="mt-2 text-lg font-semibold text-gray-900">
+                            <h3 className="mt-2 text-base sm:text-lg font-semibold text-gray-900 truncate">
                               {property.title || 'Untitled property'}
                             </h3>
-                            <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                              <MapPin className="h-4 w-4 text-blue-500" />
-                              <span>
+                            <div className="mt-1 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-light-blue-500 flex-shrink-0" />
+                              <span className="truncate">
                                 {property.location || property.address || '—'}
                                 {property.city ? `, ${property.city}` : ''}
                                 {property.state ? `, ${property.state}` : ''}
@@ -728,17 +925,17 @@ export default function AdminDashboard() {
                           </div>
                           <button
                             onClick={() => goToProperty(property.id)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:border-blue-500 hover:text-blue-600"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition hover:border-light-blue-500 hover:text-dark-blue-500"
                           >
                             View property
-                            <ArrowUpRight className="h-3.5 w-3.5" />
+                            <ArrowUpRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           </button>
                         </div>
 
-                        <div className="mt-4 grid gap-3 text-sm text-gray-600 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 sm:grid-cols-2 lg:grid-cols-3">
                           <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-emerald-500" />
-                            <span className="font-semibold text-gray-900">
+                            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
+                            <span className="font-semibold text-gray-900 truncate">
                                 Tsh {formatPrice(property.price || 0)}
                               {property.price_per && property.price_per !== 'one_time'
                                 ? `/${property.price_per}`
@@ -747,7 +944,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <span className="text-gray-500">Owner</span>
-                            <p className="font-medium text-gray-900">{ownerName}</p>
+                            <p className="font-medium text-gray-900 truncate">{ownerName}</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Submitted</span>
@@ -758,28 +955,28 @@ export default function AdminDashboard() {
                         </div>
 
                         {isPending && (
-                          <div className="mt-4 flex flex-wrap gap-2">
+                          <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
                             <button
                               disabled={processing}
                               onClick={() => handleApproval(property.id, true)}
-                              className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs sm:text-sm font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {processing ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                               ) : (
-                                <CheckCircle className="h-4 w-4" />
+                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                               )}
                               {processing ? 'Processing…' : 'Approve'}
                             </button>
                             <button
                               disabled={processing}
                               onClick={() => handleApproval(property.id, false)}
-                              className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs sm:text-sm font-medium text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {processing ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                               ) : (
-                                <XCircle className="h-4 w-4" />
+                                <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                               )}
                               {processing ? 'Processing…' : 'Reject'}
                             </button>
@@ -791,17 +988,17 @@ export default function AdminDashboard() {
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
+              <div className="rounded-xl sm:rounded-2xl border border-dashed border-gray-300 p-8 sm:p-10 text-center text-xs sm:text-sm text-gray-500">
                 No properties have been submitted yet.
               </div>
             )}
           </div>
 
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-xl">
-            <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-xl">
+            <div className="mb-4 sm:mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Pending approvals</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Pending approvals</h2>
+                <p className="text-xs sm:text-sm text-gray-500">
                   {pendingCount > 0
                     ? `${pendingCount} listing${pendingCount > 1 ? 's are' : ' is'} waiting for your review.`
                     : 'All caught up — nothing to approve right now.'}
@@ -810,33 +1007,55 @@ export default function AdminDashboard() {
             </div>
 
             {pendingCount ? (
-              <div className="space-y-4">
+              <div className="space-y-4 sm:space-y-6">
                 {pendingProperties.map((property) => {
                   const processing = Boolean(actionLoading[property.id]);
                   const ownerName =
-                    property?.profiles?.full_name ||
-                    property?.profiles?.name ||
-                    (property?.owner && typeof property.owner === 'object'
-                      ? property.owner.full_name || property.owner.name
-                      : property?.owner) ||
+                    (property?.agent && typeof property.agent === 'object' ? (property.agent.name || property.agent.full_name) : property?.agent) ||
+                    (property?.profiles?.full_name) || 
+                    (property.owner && typeof property.owner === 'object' ? (property.owner.name || property.owner.full_name) : property.owner) || 
                     'N/A';
+                  
+                  // Check if property is approved using helper function
+                  const isApproved = isPropertyApproved(property);
+                  // Check moderationStatus first, then fallback to status
+                  const rawStatus = property?.moderationStatus || property?.status || (isApproved ? 'approved' : 'pending');
+                  const normalizedStatus = (() => {
+                    const str = String(rawStatus).toLowerCase();
+                    if (str === 'true' || str === 'approved' || str === '1' || isApproved) return 'approved';
+                    if (str === 'rejected' || str === 'declined') return 'rejected';
+                    return 'pending';
+                  })();
+                  
+                  const statusClasses =
+                    normalizedStatus === 'approved'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : normalizedStatus === 'rejected'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-amber-100 text-amber-700';
+                  const statusText =
+                    normalizedStatus === 'approved'
+                      ? 'Approved'
+                      : normalizedStatus === 'rejected'
+                      ? 'Rejected'
+                      : 'Pending review';
 
                   return (
                     <div
                       key={property.id}
-                      className="grid gap-6 rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-6 transition hover:border-blue-200 hover:shadow-lg lg:grid-cols-[200px,1fr,180px]"
+                      className="flex flex-col lg:grid lg:grid-cols-[200px,1fr,180px] gap-4 sm:gap-6 rounded-xl sm:rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-4 sm:p-6 transition hover:border-blue-200 hover:shadow-lg"
                     >
-                      <div className="overflow-hidden rounded-xl bg-gray-100">
+                      <div className="overflow-hidden rounded-lg sm:rounded-xl bg-gray-100 w-full lg:w-auto">
                         <img
                           src={resolveImageUrl(property)}
                           alt={property.title}
-                          className="h-44 w-full object-cover"
+                          className="h-48 sm:h-44 w-full object-cover"
                         />
                       </div>
 
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-500">
-                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-600">
+                          <span className="rounded-full bg-light-blue-50 px-2 py-0.5 text-dark-blue-500">
                             {property.listing_type === 'buy'
                               ? 'For Sale'
                               : property.listing_type === 'rent'
@@ -846,30 +1065,30 @@ export default function AdminDashboard() {
                           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-600">
                             {property.property_type || 'Property'}
                           </span>
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
-                            Pending review
+                          <span className={`rounded-full px-2 py-0.5 ${statusClasses}`}>
+                            {statusText}
                           </span>
                         </div>
 
-                        <h3 className="mt-2 text-xl font-semibold text-gray-900">
+                        <h3 className="mt-2 text-lg sm:text-xl font-semibold text-gray-900 truncate">
                           {property.title || 'Untitled property'}
                         </h3>
-                        <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+                        <p className="mt-2 line-clamp-2 text-xs sm:text-sm text-gray-600">
                           {property.description || 'No description provided.'}
                         </p>
 
-                        <div className="mt-4 grid gap-3 text-sm text-gray-600 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 sm:grid-cols-2 lg:grid-cols-3">
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-blue-500" />
-                            <span>
+                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-light-blue-500 flex-shrink-0" />
+                            <span className="truncate">
                               {property.location || property.address || '—'}
                               {property.city ? `, ${property.city}` : ''}
                               {property.state ? `, ${property.state}` : ''}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-emerald-500" />
-                            <span className="font-semibold text-gray-900">
+                            <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
+                            <span className="font-semibold text-gray-900 truncate">
                               Tsh {formatPrice(property.price || 0)}
                               {property.price_per && property.price_per !== 'one_time'
                                 ? `/${property.price_per}`
@@ -878,11 +1097,11 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <span className="text-gray-500">Owner</span>
-                            <p className="font-medium text-gray-900">{ownerName}</p>
+                            <p className="font-medium text-gray-900 truncate">{ownerName}</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Submitted</span>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-gray-900 text-xs sm:text-sm">
                               {formatDateSafe(property.created_at || property.createdAt, true)}
                             </p>
                           </div>
@@ -897,45 +1116,49 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2 lg:flex-col">
                         <button
                           onClick={() => goToProperty(property.id)}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 transition hover:border-blue-200 hover:bg-blue-100"
+                          className="w-full lg:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-light-blue-100 bg-light-blue-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-dark-blue-500 transition hover:border-blue-200 hover:bg-light-blue-100"
                         >
-                          <Eye className="h-4 w-4" />
-                          Preview listing
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>Preview listing</span>
                         </button>
-                        <button
-                          disabled={processing}
-                          onClick={() => handleApproval(property.id, true)}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {processing ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                          {processing ? 'Processing…' : 'Approve'}
-                        </button>
-                        <button
-                          disabled={processing}
-                          onClick={() => handleApproval(property.id, false)}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {processing ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <XCircle className="h-4 w-4" />
-                          )}
-                          {processing ? 'Processing…' : 'Reject'}
-                        </button>
+                        {normalizedStatus === 'pending' && (
+                          <>
+                            <button
+                              disabled={processing}
+                              onClick={() => handleApproval(property.id, true)}
+                              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {processing ? (
+                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                              ) : (
+                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                              )}
+                              {processing ? 'Processing…' : 'Approve'}
+                            </button>
+                            <button
+                              disabled={processing}
+                              onClick={() => handleApproval(property.id, false)}
+                              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {processing ? (
+                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                              ) : (
+                                <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                              )}
+                              {processing ? 'Processing…' : 'Reject'}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500">
+              <div className="rounded-xl sm:rounded-2xl border border-dashed border-gray-300 p-8 sm:p-10 text-center text-xs sm:text-sm text-gray-500">
                 Fantastic! There are no pending approvals right now.
               </div>
             )}

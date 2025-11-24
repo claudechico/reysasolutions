@@ -103,7 +103,7 @@ export default function BookingPage() {
     return (
   <div className="min-h-screen pt-24 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -115,12 +115,12 @@ export default function BookingPage() {
   }
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-6">
           <button
             onClick={() => navigate(`/properties/${id}`)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Property</span>
@@ -159,7 +159,7 @@ export default function BookingPage() {
                         min={format(new Date(), 'yyyy-MM-dd')}
                         value={bookingData.checkIn}
                         onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -176,7 +176,7 @@ export default function BookingPage() {
                         min={bookingData.checkIn || format(addDays(new Date(), 1), 'yyyy-MM-dd')}
                         value={bookingData.checkOut}
                         onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -194,7 +194,7 @@ export default function BookingPage() {
                       min="1"
                       value={bookingData.guests}
                       onChange={(e) => setBookingData({ ...bookingData, guests: parseInt(e.target.value) })}
-                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     />
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export default function BookingPage() {
                 <button
                   type="submit"
                   disabled={bookingLoading || success}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-8 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {bookingLoading ? 'Processing...' : 'Request Booking'}
                 </button>
@@ -240,13 +240,13 @@ export default function BookingPage() {
 
                     <div className="border-t border-gray-200 pt-3 flex items-center justify-between">
                       <span className="font-bold text-gray-900">Total</span>
-                      <span className="text-2xl font-bold text-blue-600">${formatPrice(calculateTotal())}</span>
+                      <span className="text-2xl font-bold text-dark-blue-500">${formatPrice(calculateTotal())}</span>
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-light-blue-50 rounded-lg p-4">
                 <p className="text-sm text-gray-700">
                   <strong>Note:</strong> This is a booking request. The property owner will review and confirm your booking.
                 </p>

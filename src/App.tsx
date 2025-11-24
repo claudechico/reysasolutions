@@ -19,6 +19,7 @@ import Favorites from './pages/Favorites';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminManageUsers from './pages/AdminManageUsers';
 import AdminManageProperties from './pages/AdminManageProperties';
+import AdminCategories from './pages/AdminCategories';
 import AdminPayments from './pages/AdminPayments';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminProfile from './pages/AdminProfile';
@@ -30,6 +31,8 @@ import Payment from './pages/Payment';
 import Subscriptions from './pages/Subscriptions';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOTP from './pages/VerifyOTP';
+import Inquiry from './pages/Inquiry';
+import MyInquiries from './pages/MyInquiries';
 
 function App() {
   return (
@@ -42,6 +45,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/properties" element={<Properties />} />
               <Route path="/properties/:id" element={<PropertyDetailEnhanced />} />
+              <Route path="/properties/:id/inquiry" element={<Inquiry />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
@@ -87,6 +91,14 @@ function App() {
                 }
               />
               <Route
+                path="/dashboard/inquiries"
+                element={
+                  <ProtectedRoute>
+                    <MyInquiries />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/dashboard/profile"
                 element={
                   <ProtectedRoute>
@@ -119,6 +131,10 @@ function App() {
               <Route
                 path="/admin/properties"
                 element={<AdminProtectedRoute><AdminManageProperties /></AdminProtectedRoute>}
+              />
+              <Route
+                path="/admin/categories"
+                element={<AdminProtectedRoute><AdminCategories /></AdminProtectedRoute>}
               />
               <Route
                 path="/admin/payments"

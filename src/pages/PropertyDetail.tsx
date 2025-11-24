@@ -65,7 +65,7 @@ export default function PropertyDetail() {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading property...</p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function PropertyDetail() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Property not found</h2>
           <button
             onClick={() => navigate('/properties')}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition"
+            className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition"
           >
             Back to Properties
           </button>
@@ -89,12 +89,12 @@ export default function PropertyDetail() {
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen pt-20 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-6">
           <button
             onClick={() => navigate('/properties')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Properties</span>
@@ -109,11 +109,11 @@ export default function PropertyDetail() {
               className="w-full h-full object-cover"
             />
             {property.featured && (
-              <div className="absolute top-6 left-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">
+              <div className="absolute top-6 left-6 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg">
                 Featured Property
               </div>
             )}
-            <div className="absolute bottom-6 left-6 bg-white text-blue-700 px-8 py-3 rounded-full text-2xl font-bold shadow-xl">
+            <div className="absolute bottom-6 left-6 bg-white text-dark-blue-600 px-8 py-3 rounded-full text-2xl font-bold shadow-xl">
               Tsh {(property.price ?? 0).toLocaleString()}
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function PropertyDetail() {
                 <div className="flex items-start justify-between mb-4">
                   <h1 className="text-4xl font-bold text-gray-900">{property.title}</h1>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-blue-600">Tsh {(property.price ?? 0).toLocaleString()}</div>
+                    <div className="text-3xl font-bold text-dark-blue-500">Tsh {(property.price ?? 0).toLocaleString()}</div>
                     {property.price_per && property.price_per !== 'one_time' && (
                       <div className="text-sm text-gray-600">per {property.price_per}</div>
                     )}
@@ -132,28 +132,28 @@ export default function PropertyDetail() {
                 </div>
 
                 <div className="flex items-center text-gray-600 mb-6">
-                  <MapPin className="w-5 h-5 mr-2 text-blue-600" />
+                  <MapPin className="w-5 h-5 mr-2 text-dark-blue-500" />
                   <span className="text-lg">{property.location}, {property.city}, {property.state}</span>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-blue-50 rounded-xl p-4 text-center">
-                    <BedDouble className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
+                    <BedDouble className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-gray-900">{property.bedrooms}</p>
                     <p className="text-sm text-gray-600">Bedrooms</p>
                   </div>
-                  <div className="bg-blue-50 rounded-xl p-4 text-center">
-                    <Bath className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
+                    <Bath className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-gray-900">{property.bathrooms}</p>
                     <p className="text-sm text-gray-600">Bathrooms</p>
                   </div>
-                  <div className="bg-blue-50 rounded-xl p-4 text-center">
-                    <Square className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
+                    <Square className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-gray-900">{property.area}</p>
                     <p className="text-sm text-gray-600">Sq. Feet</p>
                   </div>
-                  <div className="bg-blue-50 rounded-xl p-4 text-center">
-                    <Home className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
+                    <Home className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-gray-900">{property.property_type}</p>
                     <p className="text-sm text-gray-600">Type</p>
                   </div>
@@ -205,7 +205,7 @@ export default function PropertyDetail() {
                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                       }}
-                      className="text-sm text-blue-700 hover:underline"
+                      className="text-sm text-dark-blue-600 hover:underline"
                     >
                       Write a review
                     </button>
@@ -239,7 +239,7 @@ export default function PropertyDetail() {
                     <select
                       value={rating}
                       onChange={(e) => setRating(parseInt(e.target.value))}
-                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
                     >
                       {[5,4,3,2,1].map(v => (
                         <option key={v} value={v}>{v} star{v>1?'s':''}</option>
@@ -253,7 +253,7 @@ export default function PropertyDetail() {
                       rows={3}
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
                       placeholder="Share details of your experience..."
                     />
                   </div>
@@ -261,7 +261,7 @@ export default function PropertyDetail() {
                     <button
                       type="submit"
                       disabled={reviewLoading}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50"
+                      className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition disabled:opacity-50"
                     >
                       {reviewLoading ? 'Submitting...' : 'Submit Review'}
                     </button>
@@ -269,7 +269,7 @@ export default function PropertyDetail() {
                 </form>
                 ) : (
                   <div className="mt-4">
-                    <p className="text-gray-600 mb-3">You must be <button onClick={() => navigate('/login')} className="text-blue-600 hover:underline">logged in</button> to post a review.</p>
+                    <p className="text-gray-600 mb-3">You must be <button onClick={() => navigate('/login')} className="text-dark-blue-500 hover:underline">logged in</button> to post a review.</p>
                   </div>
                 )}
               </div>
@@ -278,7 +278,7 @@ export default function PropertyDetail() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Property Details</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-start space-x-3">
-                      <Calendar className="w-5 h-5 text-blue-600 mt-1" />
+                      <Calendar className="w-5 h-5 text-dark-blue-500 mt-1" />
                       <div>
                         <p className="text-sm text-gray-600">Listed Date</p>
                         <p className="font-semibold text-gray-900">
@@ -288,7 +288,7 @@ export default function PropertyDetail() {
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <Home className="w-5 h-5 text-blue-600 mt-1" />
+                      <Home className="w-5 h-5 text-dark-blue-500 mt-1" />
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
                         <p className="font-semibold text-gray-900 capitalize">{property.status}</p>
@@ -299,20 +299,20 @@ export default function PropertyDetail() {
               </div>
 
               <div className="lg:col-span-1">
-                <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 border border-blue-100 sticky top-24">
+                <div className="bg-gradient-to-br from-light-blue-50 to-white rounded-2xl p-6 border border-light-blue-100 sticky top-24">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Interested in this property?</h3>
                   <p className="text-gray-600 mb-6">Contact us to schedule a viewing or get more information.</p>
 
                   <button
                     onClick={() => navigate('/contact')}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30 font-medium mb-3"
+                    className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium mb-3"
                   >
                     Schedule Viewing
                   </button>
 
                   <button
                     onClick={() => navigate('/contact')}
-                    className="w-full border-2 border-blue-600 text-blue-600 px-6 py-3.5 rounded-lg hover:bg-blue-50 transition font-medium"
+                    className="w-full border-2 border-dark-blue-500 text-dark-blue-500 px-6 py-3.5 rounded-lg hover:bg-light-blue-50 transition font-medium"
                   >
                     Contact Agent
                   </button>
@@ -327,7 +327,7 @@ export default function PropertyDetail() {
                         navigate('/login');
                       }
                     }}
-                    className="w-full mt-4 bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition font-medium"
+                    className="w-full mt-4 bg-dark-blue-600 text-white px-6 py-3 rounded-lg hover:bg-dark-blue-700 transition font-medium"
                   >
                     Add Review
                   </button>

@@ -33,7 +33,7 @@ export default function Subscriptions() {
   };
 
   return (
-    <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-4">Subscriptions</h1>
         <p className="text-gray-600 mb-6">Manage your subscriptions and view payment status.</p>
@@ -54,7 +54,7 @@ export default function Subscriptions() {
                       <div className="text-sm text-gray-500">Expires: {s.expiresAt || 'N/A'}</div>
                     </div>
                     <div>
-                      <button onClick={() => handleRenew(s.id)} className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg">Renew</button>
+                      <button onClick={() => handleRenew(s.id)} className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-2 rounded-lg">Renew</button>
                     </div>
                   </div>
                 ))

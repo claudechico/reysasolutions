@@ -23,10 +23,23 @@ export default function MyBookings() {
 
   const loadBookings = async () => {
     setLoading(true);
-    const params = activeTab === 'my-bookings' ? {} : { all: 'true', ownProperties: 'true' } as any;
-    const res = await bookingsApi.list(params);
-    setBookings(res?.data?.bookings || []);
-    setLoading(false);
+    try {
+      let res;
+      if (activeTab === 'my-bookings') {
+        // Use user-bookings endpoint to get all bookings belonging to the user (as guest or property owner/agent)
+        res = await bookingsApi.getUserBookings();
+      } else {
+        // For property bookings, use the regular list endpoint with filters
+        const params = { all: 'true', ownProperties: 'true' } as any;
+        res = await bookingsApi.list(params);
+      }
+      setBookings(res?.data?.bookings || []);
+    } catch (err: any) {
+      console.error('Failed to load bookings', err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateBookingStatus = async (_bookingId: string, _status: string) => {
@@ -82,7 +95,7 @@ export default function MyBookings() {
     return (
   <div className="min-h-screen pt-24 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading bookings...</p>
         </div>
       </div>
@@ -90,7 +103,7 @@ export default function MyBookings() {
   }
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Bookings</h1>
 
@@ -99,7 +112,7 @@ export default function MyBookings() {
             onClick={() => setActiveTab('my-bookings')}
             className={`px-6 py-3 rounded-lg font-medium transition ${
               activeTab === 'my-bookings'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-dark-blue-500 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -109,7 +122,7 @@ export default function MyBookings() {
             onClick={() => setActiveTab('property-bookings')}
             className={`px-6 py-3 rounded-lg font-medium transition ${
               activeTab === 'property-bookings'
-                ? 'bg-blue-600 text-white'
+                ? 'bg-dark-blue-500 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
@@ -133,7 +146,7 @@ export default function MyBookings() {
 
                   <div className="lg:col-span-2">
                     <h3
-                      className="text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-blue-600"
+                      className="text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-dark-blue-500"
                       onClick={() => navigate(`/properties/${(booking as any).properties?.id || booking.property?.id}`)}
                     >
                       {(booking as any).properties?.title || booking.property?.title || 'Untitled property'}
@@ -145,17 +158,17 @@ export default function MyBookings() {
 
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-700">
-                        <Calendar className="w-4 h-4 mr-2 text-blue-600" />
+                        <Calendar className="w-4 h-4 mr-2 text-dark-blue-500" />
                         <span className="text-sm">
                           {format(new Date((booking as any).check_in || (booking as any).startDate), 'MMM dd, yyyy')} - {format(new Date((booking as any).check_out || (booking as any).endDate), 'MMM dd, yyyy')}
                         </span>
                       </div>
                       <div className="flex items-center text-gray-700">
-                        <Users className="w-4 h-4 mr-2 text-blue-600" />
+                        <Users className="w-4 h-4 mr-2 text-dark-blue-500" />
                         <span className="text-sm">{(booking as any).guests || (booking as any).numGuests || 1} Guests</span>
                       </div>
                       <div className="flex items-center text-gray-700">
-                        <DollarSign className="w-4 h-4 mr-2 text-blue-600" />
+                        <DollarSign className="w-4 h-4 mr-2 text-dark-blue-500" />
                         <span className="text-sm font-semibold">Tsh {formatPrice(((booking as any).total_price ?? (booking as any).totalAmount) || 0)}</span>
                       </div>
                     </div>
@@ -220,7 +233,7 @@ export default function MyBookings() {
             {activeTab === 'my-bookings' && (
               <button
                 onClick={() => navigate('/properties')}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition"
+                className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition"
               >
                 Browse Properties
               </button>

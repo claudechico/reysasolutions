@@ -71,13 +71,13 @@ export default function ForgotPassword() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg"
+              className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg"
             >
               {loading ? 'Sending...' : 'Send Reset Code'}
             </button>
@@ -93,13 +93,13 @@ export default function ForgotPassword() {
                 required
                 value={otp}
                 onChange={e => setOtp(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg"
+              className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg"
             >
               {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
@@ -116,7 +116,7 @@ export default function ForgotPassword() {
                 minLength={6}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
               />
             </div>
             <div>
@@ -127,13 +127,13 @@ export default function ForgotPassword() {
                 minLength={6}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg"
+              className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg"
             >
               {loading ? 'Resetting...' : 'Reset Password'}
             </button>

@@ -145,7 +145,10 @@
     "details": "Maelezo ya Mali",
     "priceFrom": "Kutoka",
     "filters": {
-      "allCategories": "Aina zote"
+      "allCategories": "Aina zote",
+      "allTypes": "Aina zote",
+      "forSale": "Kwa Kuuza",
+      "forRent": "Kwa Kukodisha"
     },
     "per": "kila",
     "bedrooms": "Vyumba vya kulala",
@@ -290,7 +293,37 @@
     "saving": "Inahifadhi...",
     "save": "Hifadhi Mabadiliko",
     "update": "Sasisha",
-    "saved": "Mabadiliko yamethibitishwa"
+    "saved": "Mabadiliko yamethibitishwa",
+    "manageAccount": "Simamia mipangilio ya akaunti yako na tazama shughuli zako",
+    "verifiedAccount": "Akaunti Imethibitishwa",
+    "unverified": "Haijathibitishwa",
+    "totalBookings": "Jumla ya Uhifadhi",
+    "payments": "Malipo",
+    "totalSpent": "Jumla ya Matumizi",
+    "favorites": "Pendwa",
+    "properties": "Mali",
+    "profile": "Profaili",
+    "bookings": "Uhifadhi",
+    "security": "Usalama",
+    "changePassword": "Badilisha Nenosiri",
+    "noBookingsYet": "Hakuna Uhifadhi Bado",
+    "startBooking": "Anza kuhifadhi mali ili uziwe hapa",
+    "browseProperties": "Vinjari Mali",
+    "noPaymentsYet": "Hakuna Malipo Bado",
+    "paymentHistory": "Historia yako ya malipo itaonekana hapa",
+    "cancel": "Ghairi",
+    "view": "Tazama",
+    "amount": "Kiasi",
+    "date": "Tarehe",
+    "phoneLabel": "Simu",
+    "user": "Mtumiaji",
+    "notAvailable": "Haipatikani",
+    "confirmed": "Imethibitishwa",
+    "pending": "Inasubiri",
+    "cancelled": "Imefutwa",
+    "waitingForApproval": "Inasubiri Idhini",
+    "approved": "Imekubaliwa",
+    "rejected": "Imekataliwa"
   },
   "dashboard": {
     "welcomeBack": "Karibu tena, {{name}}!",
@@ -323,7 +356,10 @@
     "viewProperty": "Tazama Mali",
     "loading": "Inapakia...",
     "prev": "Iliyotangulia",
-    "next": "Ifuatayo"
+    "next": "Ifuatayo",
+    "waitingForApproval": "Inasubiri Idhini",
+    "approved": "Imekubaliwa",
+    "rejected": "Imekataliwa"
   },
   "errors": {
     "required": "Shamba hili linahitajika",

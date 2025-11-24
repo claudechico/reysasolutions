@@ -113,12 +113,12 @@ export default function PropertyForm() {
   };
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-6">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Dashboard</span>
@@ -148,7 +148,7 @@ export default function PropertyForm() {
                   required
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="Modern Family Home"
                 />
               </div>
@@ -162,7 +162,7 @@ export default function PropertyForm() {
                   rows={4}
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="Describe your property..."
                 />
               </div>
@@ -177,7 +177,7 @@ export default function PropertyForm() {
                   required
                   value={formData.price}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="850000"
                 />
               </div>
@@ -191,7 +191,7 @@ export default function PropertyForm() {
                   required
                   value={formData.property_type}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                 >
                   <option value="House">House</option>
                   <option value="Apartment">Apartment</option>
@@ -211,7 +211,7 @@ export default function PropertyForm() {
                   required
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="123 Main Street"
                 />
               </div>
@@ -226,7 +226,7 @@ export default function PropertyForm() {
                   required
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="Los Angeles"
                 />
               </div>
@@ -241,7 +241,7 @@ export default function PropertyForm() {
                   required
                   value={formData.state}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="CA"
                 />
               </div>
@@ -256,7 +256,7 @@ export default function PropertyForm() {
                   required
                   value={formData.bedrooms}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="4"
                 />
               </div>
@@ -271,7 +271,7 @@ export default function PropertyForm() {
                   required
                   value={formData.bathrooms}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="3"
                 />
               </div>
@@ -286,7 +286,7 @@ export default function PropertyForm() {
                   required
                   value={formData.area}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="3200"
                 />
               </div>
@@ -300,7 +300,7 @@ export default function PropertyForm() {
                   required
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                 >
                   <option value="available">Available</option>
                   <option value="pending">Pending</option>
@@ -317,7 +317,7 @@ export default function PropertyForm() {
                   name="image_url"
                   value={formData.image_url}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
@@ -329,7 +329,7 @@ export default function PropertyForm() {
                     name="featured"
                     checked={formData.featured}
                     onChange={handleChange}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-5 h-5 text-dark-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-light-blue-500"
                   />
                   <span className="text-sm font-medium text-gray-700">
                     Mark as Featured Property
@@ -342,7 +342,7 @@ export default function PropertyForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-8 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 <Save className="w-5 h-5" />
                 <span>{loading ? 'Saving...' : 'Save Property'}</span>

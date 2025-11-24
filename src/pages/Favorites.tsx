@@ -40,7 +40,7 @@ export default function Favorites() {
     return (
   <div className="min-h-screen pt-24 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading favorites...</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function Favorites() {
   }
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">My Favorites</h1>
         <p className="text-gray-600 mb-8">Properties you've saved for later</p>
@@ -100,11 +100,11 @@ export default function Favorites() {
                       );
                     })()}
                     {property.featured && (
-                      <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
                         Featured
                       </div>
                     )}
-                    <div className="absolute bottom-4 left-4 bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                    <div className="absolute bottom-4 left-4 bg-white text-dark-blue-600 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
                       Tsh {formatPrice(property.price)}
                       {property.price_per && property.price_per !== 'one_time' && `/${property.price_per}`}
                     </div>
@@ -112,12 +112,12 @@ export default function Favorites() {
 
                   <div className="p-6">
                     <div className="mb-2">
-                      <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                      <span className="text-xs font-medium px-2 py-1 bg-light-blue-100 text-dark-blue-600 rounded">
                         {property.listing_type === 'buy' ? 'For Sale' : property.listing_type === 'rent' ? 'For Rent' : 'Vacation'}
                       </span>
                     </div>
                     <h3
-                      className="text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-blue-600"
+                      className="text-xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-dark-blue-500"
                       onClick={() => navigate(`/properties/${property.id}`)}
                     >
                       {property.title}
@@ -128,15 +128,15 @@ export default function Favorites() {
                     </div>
                     <div className="flex items-center justify-between text-gray-600 border-t border-gray-100 pt-4">
                       <div className="flex items-center">
-                        <BedDouble className="w-4 h-4 mr-1 text-blue-600" />
+                        <BedDouble className="w-4 h-4 mr-1 text-dark-blue-500" />
                         <span className="text-sm font-medium">{property.bedrooms}</span>
                       </div>
                       <div className="flex items-center">
-                        <Bath className="w-4 h-4 mr-1 text-blue-600" />
+                        <Bath className="w-4 h-4 mr-1 text-dark-blue-500" />
                         <span className="text-sm font-medium">{property.bathrooms}</span>
                       </div>
                       <div className="flex items-center">
-                        <Square className="w-4 h-4 mr-1 text-blue-600" />
+                        <Square className="w-4 h-4 mr-1 text-dark-blue-500" />
                         <span className="text-sm font-medium">{property.area} sqft</span>
                       </div>
                     </div>
@@ -154,7 +154,7 @@ export default function Favorites() {
             </p>
             <button
               onClick={() => navigate('/properties')}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition"
+              className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition"
             >
               Browse Properties
             </button>

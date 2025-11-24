@@ -139,13 +139,20 @@ export default function PropertyFormEnhanced() {
       return listingType === 'rent' ? 'for_rent' : 'for_sale';
     };
 
+    const mappedStatus = mapStatusToBackend(formData.status, formData.listing_type);
+    console.log('[PropertyFormEnhanced] Status mapping:', {
+      frontendStatus: formData.status,
+      frontendListingType: formData.listing_type,
+      mappedBackendStatus: mappedStatus
+    });
+
     const propertyData: any = {
       title: formData.title,
       description: formData.description,
       // backend expects `property_type`
       property_type: formData.property_type || undefined,
       // map frontend status/listing_type to backend enum
-  status: mapStatusToBackend(formData.status, formData.listing_type),
+  status: mappedStatus,
       // include listing and pricing fields
       listing_type: formData.listing_type || undefined,
       price_per: formData.price_per || undefined,
@@ -180,13 +187,29 @@ export default function PropertyFormEnhanced() {
 
     try {
       console.log('[PropertyForm] Submitting property payload', propertyData);
+      console.log('[PropertyForm] Status field being sent:', {
+        status: propertyData.status,
+        listing_type: propertyData.listing_type,
+        fullPayload: propertyData
+      });
+      
       if (id && id !== 'new') {
         const updRes = await propertiesApiExtended.update(id, propertyData);
         console.log('[PropertyForm] PATCH /properties/:id response', updRes);
+        console.log('[PropertyForm] Updated property status fields:', {
+          status: updRes?.property?.status,
+          listing_type: updRes?.property?.listing_type,
+          fullProperty: updRes?.property
+        });
         propertyId = id;
       } else {
         const created: any = await propertiesApiExtended.create(propertyData);
         console.log('[PropertyForm] POST /properties create response', created);
+        console.log('[PropertyForm] Created property status fields:', {
+          status: created?.property?.status,
+          listing_type: created?.property?.listing_type,
+          fullProperty: created?.property
+        });
         propertyId = created?.property?.id || created?.id;
       }
 
@@ -266,12 +289,12 @@ export default function PropertyFormEnhanced() {
   };
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-6">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>{t('propertyForm.backToDashboard')}</span>
@@ -306,7 +329,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderTitle')}
                   />
                 </div>
@@ -321,7 +344,7 @@ export default function PropertyFormEnhanced() {
                     rows={4}
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderDescription')}
                   />
                 </div>
@@ -335,7 +358,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.listing_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="buy">{t('propertyForm.forSale')}</option>
                     <option value="rent">{t('propertyForm.forRent')}</option>
@@ -352,7 +375,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.property_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="House">{t('propertyForm.typeHouse')}</option>
                     <option value="Apartment">{t('propertyForm.typeApartment')}</option>
@@ -370,7 +393,7 @@ export default function PropertyFormEnhanced() {
                     name="categoryId"
                     value={formData.categoryId || ''}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="">Select a category</option>
                     {categories.map(c => (
@@ -389,7 +412,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.price}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderPrice')}
                   />
                 </div>
@@ -403,7 +426,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.price_per}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="one_time">{t('propertyForm.oneTime')}</option>
                     <option value="month">{t('propertyForm.perMonth')}</option>
@@ -427,7 +450,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderAddress')}
                   />
                 </div>
@@ -442,7 +465,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.zipCode}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderZip')}
                   />
                 </div>
@@ -457,7 +480,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.city}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderCity')}
                   />
                 </div>
@@ -472,7 +495,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.state}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderState')}
                   />
                 </div>
@@ -487,7 +510,7 @@ export default function PropertyFormEnhanced() {
                     name="latitude"
                     value={formData.latitude}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderLatitude')}
                   />
                 </div>
@@ -502,7 +525,7 @@ export default function PropertyFormEnhanced() {
                     name="longitude"
                     value={formData.longitude}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderLongitude')}
                   />
                 </div>
@@ -522,7 +545,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.bedrooms}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderBedrooms')}
                   />
                 </div>
@@ -537,7 +560,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.bathrooms}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderBathrooms')}
                   />
                 </div>
@@ -552,7 +575,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.area}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder={t('propertyForm.placeholderArea')}
                   />
                 </div>
@@ -566,7 +589,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="available">{t('propertyForm.statusAvailable')}</option>
                     <option value="pending">{t('propertyForm.statusPending')}</option>
@@ -583,7 +606,7 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.availability_status}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                   >
                     <option value="available">{t('propertyForm.availNow')}</option>
                     <option value="booked">{t('propertyForm.availBooked')}</option>
@@ -602,7 +625,7 @@ export default function PropertyFormEnhanced() {
                       type="checkbox"
                       checked={formData.amenities.includes(amenity)}
                       onChange={() => handleAmenityToggle(amenity)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-4 h-4 text-dark-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-light-blue-500"
                     />
                     <span className="text-sm text-gray-700">{t(`amenities.${amenity}`)}</span>
                   </label>
@@ -622,7 +645,7 @@ export default function PropertyFormEnhanced() {
                     name="image_url"
                     value={formData.image_url}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                     placeholder="https://example.com/image.jpg"
                   />
                 </div> */}
@@ -636,7 +659,7 @@ export default function PropertyFormEnhanced() {
                     accept="image/*"
                     multiple
                     onChange={onSelectImages}
-                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-light-blue-50 file:text-dark-blue-600 hover:file:bg-light-blue-100"
                   />
                   {imageFiles.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
@@ -664,7 +687,7 @@ export default function PropertyFormEnhanced() {
                     type="file"
                     accept="video/*"
                     onChange={onSelectVideo}
-                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-light-blue-50 file:text-dark-blue-600 hover:file:bg-light-blue-100"
                   />
                   {videoFile && (
                     <div className="relative mt-3">
@@ -717,7 +740,7 @@ export default function PropertyFormEnhanced() {
                   <button
                     type="button"
                     onClick={addMediaFile}
-                    className="flex items-center space-x-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:text-blue-600 transition"
+                    className="flex items-center space-x-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-light-blue-500 hover:text-dark-blue-500 transition"
                   >
                     <Plus className="w-5 h-5" />
                     <span>{t('propertyForm.addMediaUrl')}</span>
@@ -733,7 +756,7 @@ export default function PropertyFormEnhanced() {
                   name="featured"
                   checked={formData.featured}
                   onChange={handleChange}
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-5 h-5 text-dark-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-light-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   {t('propertyForm.markFeatured')}
@@ -745,7 +768,7 @@ export default function PropertyFormEnhanced() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-8 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 <Save className="w-5 h-5" />
                 <span>{loading ? t('propertyForm.saving') : t('propertyForm.savePending')}</span>

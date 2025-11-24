@@ -25,6 +25,8 @@ export default function Properties() {
     type: searchParams.get('type') || '',
     category: searchParams.get('category') || '',
     categoryId: searchParams.get('categoryId') || '',
+    listing_type: searchParams.get('listing_type') || '',
+    status: searchParams.get('status') || '', // Filter by status: for_sale, for_rent
     minPrice: '',
     maxPrice: '',
     bedrooms: '',
@@ -130,10 +132,12 @@ export default function Properties() {
 
   const loadProperties = async (p: number = 1) => {
     console.log('[Properties] loadProperties called', { page: p, filters, search: searchParams.toString() });
+    console.log('[Properties] Status filter value:', filters.status);
     setLoading(true);
     try {
       const params = buildQueryParams(p);
       console.log('[Properties] built query params ->', params);
+      console.log('[Properties] Status in query params:', params.status);
       let res: any;
       if (params.categoryId) {
         // call category-specific endpoint and pass other params
@@ -146,9 +150,45 @@ export default function Properties() {
         res = await propertiesApi.list(params as any);
       }
       console.log('[Properties] API response', res);
-      const list = res?.properties || [];
-      setProperties(list);
-      setTotal(res?.total || 0);
+      const allProperties = res?.properties || [];
+      
+      // Log each property's status-related fields for debugging
+      console.log('[Properties] All properties received:', allProperties.length);
+      allProperties.forEach((property: any, index: number) => {
+        console.log(`[Properties] Property ${index + 1}:`, {
+          id: property.id,
+          title: property.title,
+          status: property.status,
+          listing_type: property.listing_type,
+          moderationStatus: property.moderationStatus,
+          is_approved: property.is_approved,
+          fullProperty: property
+        });
+      });
+      
+      // Filter to show only approved properties (moderationStatus === 'approved')
+      let approvedProperties = allProperties.filter((property: any) => {
+        const moderationStatus = property?.moderationStatus;
+        // Only show properties with moderationStatus === 'approved'
+        return moderationStatus && String(moderationStatus).toLowerCase() === 'approved';
+      });
+      
+      // Additional client-side filtering by status if status filter is set
+      if (filters.status && filters.status.trim() !== '') {
+        const statusFilter = filters.status.trim().toLowerCase();
+        approvedProperties = approvedProperties.filter((property: any) => {
+          const propertyStatus = String(property?.status || '').toLowerCase();
+          return propertyStatus === statusFilter;
+        });
+        console.log('[Properties] After status filtering:', {
+          statusFilter,
+          remainingCount: approvedProperties.length
+        });
+      }
+      
+      console.log('[Properties] Approved properties after filtering:', approvedProperties.length);
+      setProperties(approvedProperties);
+      setTotal(approvedProperties.length);
       setPage(p);
     } catch (e: any) {
       console.error('Failed to load properties', e);
@@ -175,6 +215,8 @@ export default function Properties() {
       type: searchParams.get('type') || prev.type,
       category: searchParams.get('category') || prev.category,
       categoryId: searchParams.get('categoryId') || prev.categoryId,
+      listing_type: searchParams.get('listing_type') || prev.listing_type,
+      status: searchParams.get('status') || prev.status,
     }));
     // reload first page for new params
     setPage(1);
@@ -219,6 +261,8 @@ export default function Properties() {
       type: '',
       category: '',
       categoryId: '',
+      listing_type: '',
+      status: '',
       minPrice: '',
       maxPrice: '',
       bedrooms: '',
@@ -228,7 +272,7 @@ export default function Properties() {
   };
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-blue-50 via-white to-blue-50">
+  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -244,7 +288,7 @@ export default function Properties() {
             <h3 className="text-lg font-semibold text-gray-900">Search & Filter</h3>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+              className="flex items-center space-x-2 text-dark-blue-500 hover:text-dark-blue-600"
             >
               <SlidersHorizontal className="w-5 h-5" />
               <span>{showFilters ? 'Hide' : 'Show'} Filters</span>
@@ -252,8 +296,8 @@ export default function Properties() {
           </div>
 
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="md:col-span-2 lg:col-span-2">
               <div className="relative">
                 <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
                 <input
@@ -262,7 +306,7 @@ export default function Properties() {
                   placeholder="Search by city, state, or address"
                   value={filters.location}
                   onChange={handleFilterChange}
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
                 />
               </div>
             </div>
@@ -270,12 +314,22 @@ export default function Properties() {
               name="categoryId"
               value={filters.categoryId}
               onChange={handleFilterChange}
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
             >
               <option value="">{t('property.filters.allCategories')}</option>
               {categories.map(c => (
                 <option key={String(c.id)} value={String(c.id)}>{c.name}</option>
               ))}
+            </select>
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+            >
+              <option value="">{t('property.filters.allTypes')}</option>
+              <option value="for_sale">{t('property.filters.forSale')}</option>
+              <option value="for_rent">{t('property.filters.forRent')}</option>
             </select>
           </div>
 
@@ -287,7 +341,7 @@ export default function Properties() {
                 placeholder="Min Price"
                 value={filters.minPrice}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
               />
               <input
                 type="number"
@@ -295,7 +349,7 @@ export default function Properties() {
                 placeholder="Max Price"
                 value={filters.maxPrice}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
               />
               <input
                 type="number"
@@ -303,7 +357,7 @@ export default function Properties() {
                 placeholder="Min Bedrooms"
                 value={filters.bedrooms}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
               />
               <input
                 type="number"
@@ -311,7 +365,7 @@ export default function Properties() {
                 placeholder="Min Bathrooms"
                 value={filters.bathrooms}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
               />
             </div>
           )}
@@ -319,7 +373,7 @@ export default function Properties() {
           <div className="flex space-x-4">
             <button
               onClick={handleSearch}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2"
+              className="flex-1 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 flex items-center justify-center space-x-2"
             >
               <Search className="w-5 h-5" />
               <span>Search</span>
@@ -335,7 +389,7 @@ export default function Properties() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-light-blue-500 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading properties...</p>
           </div>
         ) : properties.length > 0 ? (
@@ -378,12 +432,12 @@ export default function Properties() {
                       );
                     })()}
                     {property.featured && (
-                      <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
                         Featured
                       </div>
                     )}
                     <div className="absolute top-4 right-4 flex items-center space-x-2">
-                      <div className="bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      <div className="bg-white text-dark-blue-500 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
                         Tsh {formatPrice(property.price)}
                       </div>
                       {user && String((user as any).role || '').toLowerCase() === 'users' && (
@@ -412,15 +466,15 @@ export default function Properties() {
                     </div>
                     <div className="flex items-center justify-between text-gray-600 border-t border-gray-100 pt-4">
                       <div className="flex items-center">
-                        <BedDouble className="w-4 h-4 mr-1 text-blue-600" />
+                        <BedDouble className="w-4 h-4 mr-1 text-light-blue-500" />
                         <span className="text-sm font-medium">{property.bedrooms}</span>
                       </div>
                       <div className="flex items-center">
-                        <Bath className="w-4 h-4 mr-1 text-blue-600" />
+                        <Bath className="w-4 h-4 mr-1 text-light-blue-500" />
                         <span className="text-sm font-medium">{property.bathrooms}</span>
                       </div>
                       <div className="flex items-center">
-                        <Square className="w-4 h-4 mr-1 text-blue-600" />
+                        <Square className="w-4 h-4 mr-1 text-light-blue-500" />
                         <span className="text-sm font-medium">{property.area} sqft</span>
                       </div>
                     </div>
@@ -436,7 +490,7 @@ export default function Properties() {
             <p className="text-gray-600 mb-6">Try adjusting your search filters</p>
             <button
               onClick={clearFilters}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-600/30"
+              className="bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30"
             >
               Clear Filters
             </button>
@@ -458,7 +512,7 @@ export default function Properties() {
                 <button
                   key={p}
                   onClick={() => goToPage(p)}
-                  className={`px-3 py-2 rounded border ${p === page ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50'}`}
+                  className={`px-3 py-2 rounded border ${p === page ? 'bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white' : 'bg-white hover:bg-gray-50'}`}
                 >
                   {p}
                 </button>

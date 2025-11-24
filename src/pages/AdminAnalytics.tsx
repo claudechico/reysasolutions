@@ -181,7 +181,7 @@ export default function AdminAnalytics() {
         value: source.totalUsers || 0,
         icon: Users,
         description: 'Registered platform accounts',
-        gradient: 'from-indigo-500 to-indigo-600',
+        gradient: 'from-indigo-500 to-dark-blue-600',
       },
       {
         id: 'bookings',
@@ -234,9 +234,9 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50" style={{ paddingTop: 'var(--app-nav-height)' }}>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50" style={{ paddingTop: 'var(--app-nav-height)' }}>
         <div className="text-center">
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-blue-600" />
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-dark-blue-500" />
           <p className="mt-3 text-sm text-gray-600">Compiling analytics snapshot…</p>
         </div>
       </div>
@@ -245,11 +245,11 @@ export default function AdminAnalytics() {
 
   return (
     <AdminProtectedRoute>
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-10">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 p-8 text-white shadow-2xl">
+        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-dark-blue-600 via-dark-blue-500 to-sky-600 p-8 text-white shadow-2xl">
             <div className="absolute -top-28 right-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
             <div className="absolute bottom-0 left-1/2 hidden h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl md:block" />
 
@@ -321,7 +321,7 @@ export default function AdminAnalytics() {
                   <h2 className="text-xl font-semibold text-gray-900">Revenue performance</h2>
                   <p className="text-sm text-gray-500">Monthly totals sourced from payment events.</p>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+                <span className="inline-flex items-center gap-1 rounded-full bg-light-blue-50 px-3 py-1 text-xs font-medium text-dark-blue-500">
                   <TrendingUp className="h-4 w-4" />
                   {revenueSeries.length} months
                 </span>
@@ -405,7 +405,7 @@ export default function AdminAnalytics() {
               </div>
               <button
                 onClick={() => window.open('/admin/properties', '_blank', 'noopener,noreferrer')}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-500 hover:text-blue-600"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-light-blue-500 hover:text-dark-blue-500"
               >
                 View all listings
                 <ArrowUpRight className="h-4 w-4" />
@@ -432,14 +432,14 @@ export default function AdminAnalytics() {
                           {property.title || 'Untitled property'}
                         </h3>
                         <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                          <MapPin className="h-4 w-4 text-blue-500" />
+                          <MapPin className="h-4 w-4 text-light-blue-500" />
                           <span>
                             {property.location || property.address || '—'}
                             {property.city ? `, ${property.city}` : ''}
                             {property.state ? `, ${property.state}` : ''}
                           </span>
                         </div>
-                        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-600">
+                        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-light-blue-50 px-3 py-1 text-[11px] font-medium text-dark-blue-500">
                           <DollarSign className="h-3 w-3" />
                           Tsh {formatPrice(property.price || 0)}
                         </div>

@@ -12,6 +12,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		headers.Authorization = `Bearer ${token}`;
 	}
 
+	// Log token status for booking endpoints (for debugging)
+	if (path.includes('/bookings')) {
+		console.log('Booking API Request:', {
+			path,
+			hasToken: !!token,
+			tokenLength: token?.length || 0,
+			method: options.method || 'GET',
+			headers: { ...headers, Authorization: token ? `Bearer ${token.substring(0, 20)}...` : 'No token' }
+		});
+	}
+
 	const fullPath = path.startsWith('/api/') ? path : `${API_BASE_PATH}${path}`;
 	const res = await fetch(`${API_BASE_URL}${fullPath}`, { ...options, headers });
 	const contentType = res.headers.get('content-type') || '';
@@ -28,6 +39,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		const err: any = new Error(String(message));
 		err.status = res.status;
 		err.body = body;
+		
+		// Log authentication errors for booking endpoints
+		if (path.includes('/bookings') && (res.status === 401 || res.status === 403)) {
+			console.error('Booking API Authentication Error:', {
+				path,
+				status: res.status,
+				message,
+				hasToken: !!token,
+				error: body
+			});
+		}
+		
 		throw err;
 	}
 	return body as T;
@@ -35,14 +58,33 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 // Public request function without authentication
 async function publicRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+	const incomingHeaders = (options.headers as Record<string, string> | undefined) || {};
+	// Explicitly remove Authorization header if present (both cases)
+	const cleanHeaders: Record<string, string> = {};
+	for (const [key, value] of Object.entries(incomingHeaders)) {
+		if (key.toLowerCase() !== 'authorization') {
+			cleanHeaders[key] = value;
+		}
+	}
+	
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
-		...(options.headers as Record<string, string> | undefined),
+		...cleanHeaders,
 	};
-	// Explicitly do NOT add Authorization header
+	// Explicitly ensure Authorization is NOT in headers (check both cases)
+	delete headers.Authorization;
+	delete headers.authorization;
 
 	const fullPath = path.startsWith('/api/') ? path : `${API_BASE_PATH}${path}`;
-	const res = await fetch(`${API_BASE_URL}${fullPath}`, { ...options, headers });
+	
+	// Create clean options without any auth-related headers
+	const cleanOptions: RequestInit = {
+		method: options.method,
+		body: options.body,
+		headers,
+	};
+	
+	const res = await fetch(`${API_BASE_URL}${fullPath}`, cleanOptions);
 	const contentType = res.headers.get('content-type') || '';
 	const isJson = contentType.includes('application/json');
 	let body: any;
@@ -125,7 +167,7 @@ export interface PropertyDto {
 	location?: string;
 	latitude?: number | null;
 	longitude?: number | null;
-	images?: any[];
+	images?: unknown[];
 	image_url?: string;
 	featured?: boolean;
 	bedrooms?: number;
@@ -171,7 +213,16 @@ export const bookingsApi = {
 		request<{ success: boolean; data: { bookings: BookingDto[] } }>(
 			`/bookings${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
 		),
+	getUserBookings: (params?: { page?: number; limit?: number; status?: string }) =>
+		request<{ success: boolean; data: { bookings: BookingDto[] } }>(
+			`/bookings/user-bookings${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
+		),
 	create: (payload: { propertyId: string | number; startDate: string; endDate: string; durationType: 'days' | 'weeks' | 'months'; totalAmount?: number }) => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) {
+			console.error('No auth token found for booking create');
+			return Promise.reject(new Error('Authentication required. Please login again.'));
+		}
 		// Map frontend durationType to backend enum values used in the Sequelize model
 		// Backend expects: 'daily', 'weekly', 'monthly'
 		const map: Record<string, string> = {
@@ -181,14 +232,36 @@ export const bookingsApi = {
 		};
 		const dt = map[String(payload.durationType)] || String(payload.durationType);
 		const body = { ...payload, durationType: dt } as any;
+		console.log('Creating booking with payload:', { ...body, tokenPresent: !!token });
 		return request<{ success: boolean; booking: BookingDto }>(`/bookings`, {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});
 	},
-	confirm: (id: string | number) => request(`/bookings/${id}/confirm`, { method: 'POST' }),
-	decline: (id: string | number) => request(`/bookings/${id}/decline`, { method: 'POST' }),
-	cancel: (id: string | number) => request(`/bookings/${id}/cancel`, { method: 'POST' }),
+	confirm: (id: string | number) => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) {
+			console.error('No auth token found for booking confirm');
+			return Promise.reject(new Error('Authentication required. Please login again.'));
+		}
+		return request(`/bookings/${id}/confirm`, { method: 'POST' });
+	},
+	decline: (id: string | number) => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) {
+			console.error('No auth token found for booking decline');
+			return Promise.reject(new Error('Authentication required. Please login again.'));
+		}
+		return request(`/bookings/${id}/decline`, { method: 'POST' });
+	},
+	cancel: (id: string | number) => {
+		const token = localStorage.getItem('auth_token');
+		if (!token) {
+			console.error('No auth token found for booking cancel');
+			return Promise.reject(new Error('Authentication required. Please login again.'));
+		}
+		return request(`/bookings/${id}/cancel`, { method: 'POST' });
+	},
 	availability: (propertyId: string | number) => request(`/bookings/property/${propertyId}/availability`),
 };
 
@@ -218,8 +291,12 @@ export const usersApi = {
 				body: JSON.stringify({ otp }),
 				headers: { Authorization: `Bearer ${verificationToken}` },
 			},
-		)
-	
+		),
+	// Public endpoint to count users by role (no auth required)
+	count: (params?: { role?: string }) =>
+		publicRequest<{ success: boolean; count: number; role?: string }>(
+			`/users/count${params?.role ? `?role=${encodeURIComponent(params.role)}` : ''}`
+		),
 };
 
 export const adminUsersApi = {
@@ -246,12 +323,11 @@ export const adminListingsApi = {
 		),
 	get: (id: string | number) => request<{ success: boolean; property: PropertyDto }>(`/admin/listings/${id}`),
 	update: (id: string | number, payload: any) => request(`/admin/listings/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
-	remove: (id: string | number) => request(`/admin/listings/${id}`, { method: 'DELETE' }),
+	remove: (id: string | number) => request(`/admin/properties/${id}`, { method: 'DELETE' }),
 	// Approve a listing (admin action)
 	approve: (id: string | number) => request(`/admin/listings/${id}/approve`, { method: 'POST' }),
 	// Decline/reject a listing (admin action)
 	decline: (id: string | number) => request(`/admin/listings/${id}/decline`, { method: 'POST' }),
-	count: () => request<{ success: boolean; total: number }>(`/admin/users/count`),
 };
 
 export const adminBookingsApi = {
@@ -346,8 +422,24 @@ export interface CategoryDto {
 }
 
 export const categoriesApi = {
-	list: () => request<{ categories: CategoryDto[] }>(`/categories`),
+	list: (params?: { includeProperties?: boolean }) =>
+		request<{ success: boolean; categories: CategoryDto[] }>(
+			`/categories${params?.includeProperties ? '?includeProperties=true' : ''}`
+		),
 	get: (id: string | number) => request<{ category: CategoryDto }>(`/categories/${id}`),
+};
+
+export const adminCategoriesApi = {
+	list: (params?: { includeProperties?: boolean }) =>
+		request<{ success: boolean; categories: CategoryDto[] }>(
+			`/categories${params?.includeProperties ? '?includeProperties=true' : ''}`
+		),
+	get: (id: string | number) => request<{ success: boolean; category: CategoryDto }>(`/categories/${id}`),
+	create: (payload: { name: string; description?: string }) =>
+		request<{ message: string; category: CategoryDto }>(`/categories`, { method: 'POST', body: JSON.stringify(payload) }),
+	update: (id: string | number, payload: { name?: string; description?: string }) =>
+		request<{ message: string; category: CategoryDto }>(`/categories/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+	remove: (id: string | number) => request<{ message: string }>(`/categories/${id}`, { method: 'DELETE' }),
 };
 
 export interface ReviewDto {

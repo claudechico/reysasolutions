@@ -45,7 +45,7 @@ export default function VerifyOTP() {
                 maxLength={6}
                 value={otp}
                 onChange={e => setOtp(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
                 autoFocus
               />
             </div>
@@ -57,14 +57,14 @@ export default function VerifyOTP() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg"
+              className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg"
             >
               {loading ? 'Verifying...' : 'Verify'}
             </button>
           </form>
         )}
         {success && (
-          <button onClick={() => navigate('/login')} className="w-full mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg">Go to Login</button>
+          <button onClick={() => navigate('/login')} className="w-full mt-4 bg-dark-blue-500 text-white px-6 py-3 rounded-lg">Go to Login</button>
         )}
       </div>
     </div>

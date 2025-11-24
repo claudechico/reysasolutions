@@ -33,7 +33,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen pt-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 relative overflow-hidden">
+    <div className="min-h-screen pt-24 bg-gradient-to-br from-slate-50 via-light-blue-50/30 to-indigo-50/50 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
@@ -44,7 +44,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-6 shadow-xl shadow-blue-500/20">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-2xl mb-6 shadow-xl shadow-light-blue-500/20">
             <MessageCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 bg-clip-text">
@@ -58,19 +58,19 @@ export default function Contact() {
         {/* Contact Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className="group relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-bl-full"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-light-blue-500/10 to-transparent rounded-bl-full"></div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-light-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                 <Phone className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Phone</h3>
               <p className="text-gray-500 mb-4 text-sm">Mon - Fri: 8AM - 6PM</p>
               <p className="text-gray-500 mb-4 text-sm">Sat: 9AM - 4PM</p>
               <div className="space-y-2">
-                <a href="tel:+255684304594" className="block text-blue-600 font-semibold hover:text-blue-700 transition-colors text-lg">
+                <a href="tel:+255684304594" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-lg">
                   +255 684 304 594
                 </a>
-                <a href="tel:+255672232334" className="block text-blue-600 font-semibold hover:text-blue-700 transition-colors text-lg">
+                <a href="tel:+255672232334" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-lg">
                   +255 672 232 334
                 </a>
               </div>
@@ -80,19 +80,19 @@ export default function Contact() {
           <div className="group relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full"></div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
+              <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-light-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                 <Mail className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">Email</h3>
               <p className="text-gray-500 mb-4 text-sm">We reply within 24 hours</p>
               <div className="space-y-2">
-                <a href="mailto:info@reysasolutions.co.tz" className="block text-indigo-600 font-semibold hover:text-indigo-700 transition-colors text-sm break-all">
+                <a href="mailto:info@reysasolutions.co.tz" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-sm break-all">
                   info@reysasolutions.co.tz
                 </a>
-                <a href="mailto:support@reysasolutions.co.tz" className="block text-indigo-600 font-semibold hover:text-indigo-700 transition-colors text-sm break-all">
+                <a href="mailto:support@reysasolutions.co.tz" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-sm break-all">
                   support@reysasolutions.co.tz
                 </a>
-                <a href="mailto:sales@reysasolutions.co.tz" className="block text-indigo-600 font-semibold hover:text-indigo-700 transition-colors text-sm break-all">
+                <a href="mailto:sales@reysasolutions.co.tz" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-sm break-all">
                   sales@reysasolutions.co.tz
                 </a>
               </div>
@@ -119,8 +119,8 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Contact Form */}
           <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 p-8 lg:p-10 overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"></div>
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-500/5 to-transparent rounded-bl-full"></div>
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-light-blue-500 via-dark-blue-500 to-dark-blue-600"></div>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-light-blue-500/5 to-transparent rounded-bl-full"></div>
             
             <div className="relative">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Send us a Message</h2>
@@ -145,7 +145,7 @@ export default function Contact() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
                       placeholder="John Doe"
                     />
                   </div>
@@ -160,7 +160,7 @@ export default function Contact() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -176,7 +176,7 @@ export default function Contact() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
                       placeholder="+255672232334"
                     />
                   </div>
@@ -190,7 +190,7 @@ export default function Contact() {
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
+                      className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
                     >
                       <option value="">Select a subject</option>
                       <option value="buying">Buying a Property</option>
@@ -211,7 +211,7 @@ export default function Contact() {
                     rows={6}
                     value={formData.message}
                     onChange={handleChange}
-                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none bg-white/50 backdrop-blur-sm"
+                    className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all resize-none bg-white/50 backdrop-blur-sm"
                     placeholder="Tell us how we can help you..."
                   />
                 </div>
@@ -219,7 +219,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 font-semibold flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-gradient-to-r from-light-blue-500 via-dark-blue-500 to-dark-blue-600 text-white px-8 py-4 rounded-xl hover:from-dark-blue-500 hover:via-dark-blue-600 hover:to-dark-blue-700 transition-all duration-300 shadow-xl shadow-light-blue-500/30 hover:shadow-2xl hover:shadow-light-blue-500/40 font-semibold flex items-center justify-center space-x-3 disabled:opacity-70 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <>
@@ -276,7 +276,7 @@ export default function Contact() {
             </div>
 
             {/* Live Chat Card */}
-            <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white overflow-hidden">
+            <div className="relative bg-gradient-to-br from-light-blue-500 via-dark-blue-500 to-dark-blue-600 rounded-3xl shadow-2xl p-8 text-white overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24"></div>
               <div className="relative">
@@ -284,7 +284,7 @@ export default function Contact() {
                   <MessageCircle className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Live Chat</h3>
-                <ul className="space-y-3 mb-8 text-blue-50">
+                <ul className="space-y-3 mb-8 text-light-blue-50">
                   <li className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                     <span>Available 24/7</span>
@@ -304,7 +304,7 @@ export default function Contact() {
                 </ul>
                 <button
                   onClick={() => window.open('YOUR_CHAT_URL', '_blank')}
-                  className="w-full bg-white text-blue-700 px-6 py-4 rounded-xl hover:bg-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-white text-dark-blue-500 px-6 py-4 rounded-xl hover:bg-light-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Start Chat Now
                 </button>
