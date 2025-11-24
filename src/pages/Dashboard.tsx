@@ -57,12 +57,23 @@ export default function Dashboard() {
     try {
       if (isRegularUser) {
         // Load favorites and bookings for regular users
-        // Use getUserBookings to get all bookings belonging to the user (as guest or property owner/agent)
+        // Use getUserBookings to get bookings where user is the guest
         const [favRes, bookRes, me] = await Promise.all([
           favoritesApi.list(),
-          bookingsApi.getUserBookings(),
+          bookingsApi.getUserBookings({ type: 'guest', limit: 100 }),
           usersApi.getProfile(),
         ]);
+        
+        console.log('Dashboard - User Bookings:', {
+          count: bookRes?.data?.bookings?.length || 0,
+          bookings: bookRes?.data?.bookings?.map((b: any) => ({
+            id: b.id,
+            status: b.status,
+            propertyId: b.propertyId || b.property?.id,
+            propertyTitle: b.property?.title,
+          }))
+        });
+        
         setFavorites(favRes?.favorites || []);
         setBookings(bookRes?.data?.bookings || []);
         setProfile(me ? { name: me.name } : null);
@@ -282,7 +293,7 @@ export default function Dashboard() {
               onClick={() => navigate('/dashboard/profile')}
               className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-5 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 text-sm sm:text-base"
             >
-              {t('dashboard.editProfile')}
+              Profile
             </button>
           </div>
         </div>

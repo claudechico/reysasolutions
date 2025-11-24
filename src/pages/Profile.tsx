@@ -65,9 +65,9 @@ export default function Profile() {
 
       if (isRegularUser) {
         // Load bookings and payments for regular users
-        // Use getUserBookings to get all bookings belonging to the user (as guest or property owner/agent)
+        // Use getUserBookings to get bookings where user is the guest
         const [bookingsRes, paymentsRes, favoritesRes] = await Promise.all([
-          bookingsApi.getUserBookings({ limit: 100 }).catch(() => ({ data: { bookings: [] } })),
+          bookingsApi.getUserBookings({ type: 'guest', limit: 100 }).catch(() => ({ data: { bookings: [] } })),
           paymentsApi.list?.({ limit: 100 }).catch(() => ({ payments: [] })),
           favoritesApi.list().catch(() => ({ favorites: [] })),
         ]);
@@ -101,23 +101,16 @@ export default function Profile() {
         setRecentPayments(payments.slice(0, 5));
       } else {
         // Load properties for agents/owners
+        // Use getUserBookings with type='owner' to get bookings for properties owned/managed by this user
         const [propsRes, bookingsRes] = await Promise.all([
           propertiesApiExtended.getByUser(me.id, { page: 1, limit: 1000 }).catch(() => ({ properties: [] })),
-          bookingsApi.list({ limit: 100 }).catch(() => ({ data: { bookings: [] } })),
+          bookingsApi.getUserBookings({ type: 'owner', limit: 100 }).catch(() => ({ data: { bookings: [] } })),
         ]);
 
         const properties = (propsRes as any)?.properties || [];
-        const allBookings = bookingsRes?.data?.bookings || [];
-        
-        // Filter bookings to only show bookings on properties owned by this agent/owner
-        const propertyIds = properties.map((p: any) => p.id);
-        const myPropertyBookings = allBookings.filter((booking: any) => {
-          const bookingPropertyId = booking.propertyId || booking.property?.id;
-          return propertyIds.includes(bookingPropertyId);
-        });
+        const myPropertyBookings = bookingsRes?.data?.bookings || [];
 
         console.log('Profile - Agent/Owner Bookings Data:', {
-          totalBookings: allBookings.length,
           myProperties: properties.length,
           myPropertyBookings: myPropertyBookings.length,
           bookings: myPropertyBookings.map((b: any) => ({

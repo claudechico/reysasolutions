@@ -91,7 +91,7 @@ export default function Navbar() {
       </div>
 
       {/* Main navigation */}
-      <nav className="w-full bg-white/80 backdrop-blur-sm shadow-sm">
+      <nav className="w-full bg-gradient-to-r from-dark-blue-50 via-light-blue-50 to-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-20">
             <Link to="/" className="flex items-center space-x-2">
@@ -105,56 +105,116 @@ export default function Navbar() {
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className={`transition font-medium ${isActive('/') ? 'text-dark-blue-500' : 'text-gray-700 hover:text-dark-blue-500'}`}>
+            <div className="hidden md:flex items-center space-x-1">
+              <Link 
+                to="/" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.home')}
               </Link>
-              <Link to="/properties" className={`transition font-medium ${isActive('/properties') ? 'text-dark-blue-500' : 'text-gray-700 hover:text-dark-blue-500'}`}>
+              <Link 
+                to="/properties" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/properties') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.properties')}
               </Link>
-              <Link to="/about" className={`transition font-medium ${isActive('/about') ? 'text-dark-blue-500' : 'text-gray-700 hover:text-dark-blue-500'}`}>
+              <Link 
+                to="/about" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/about') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.about')}
               </Link>
-              <Link to="/contact" className={`transition font-medium ${isActive('/contact') ? 'text-dark-blue-500' : 'text-gray-700 hover:text-dark-blue-500'}`}>
+              <Link 
+                to="/contact" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/contact') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.contact')}
               </Link>
               {/* Show Subscriptions link only to non-admin users */}
               {role !== 'admin' && (
-                <Link to="/subscriptions" className={`transition font-medium ${isActive('/subscriptions') ? 'text-dark-blue-500' : 'text-gray-700 hover:text-dark-blue-500'}`}>
+                <Link 
+                  to="/subscriptions" 
+                  className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                    isActive('/subscriptions') 
+                      ? 'text-dark-blue-600 bg-light-blue-50' 
+                      : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                  }`}
+                >
                   {t('nav.subscriptions')}
                 </Link>
               )}
             </div>
 
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-3">
               {user ? (
                 <>
                   {/* Only users with role "users" can access favorites and bookings */}
                   {role === 'users' && (
-                    <Link to="/favorites" className="flex items-center space-x-2 text-gray-700 hover:text-dark-blue-500 transition font-medium">
-                      <Heart className="w-5 h-5" />
-                      <span>{t('nav.favorites')}</span>
-                    </Link>
+                    <>
+                      <Link 
+                        to="/favorites" 
+                        className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg transition-all font-medium ${
+                          isActive('/favorites') 
+                            ? 'bg-light-blue-50 text-dark-blue-600 shadow-sm' 
+                            : 'text-gray-600 hover:text-dark-blue-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 ${isActive('/favorites') ? 'fill-current' : ''}`} />
+                        <span className="text-sm">{t('nav.favorites')}</span>
+                      </Link>
+                      <Link 
+                        to="/dashboard/bookings" 
+                        className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg transition-all font-medium ${
+                          isActive('/dashboard/bookings') 
+                            ? 'bg-light-blue-50 text-dark-blue-600 shadow-sm' 
+                            : 'text-gray-600 hover:text-dark-blue-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">{t('nav.bookings')}</span>
+                      </Link>
+                    </>
                   )}
-                  {role === 'users' && (
-                    <Link to="/dashboard/bookings" className="flex items-center space-x-2 text-gray-700 hover:text-dark-blue-500 transition font-medium">
-                      <Calendar className="w-5 h-5" />
-                      <span>{t('nav.bookings')}</span>
-                    </Link>
-                  )}
-                  <Link to="/dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-dark-blue-500 transition font-medium">
-                    <LayoutDashboard className="w-5 h-5" />
-                    <span>{t('nav.dashboard')}</span>
+                  <Link 
+                    to="/dashboard" 
+                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg transition-all font-medium ${
+                      isActive('/dashboard') 
+                        ? 'bg-light-blue-50 text-dark-blue-600 shadow-sm' 
+                        : 'text-gray-600 hover:text-dark-blue-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span className="text-sm">{t('nav.dashboard')}</span>
                   </Link>
-                  <button onClick={handleSignOut} className="flex items-center space-x-2 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30">
+                  <div className="h-6 w-px bg-gray-300 mx-1"></div>
+                  <button 
+                    onClick={handleSignOut} 
+                    className="flex items-center space-x-2 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-2 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all shadow-md hover:shadow-lg font-medium text-sm"
+                  >
                     <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="text-gray-700 hover:text-dark-blue-500 transition font-medium">{t('nav.login')}</Link>
-                  <Link to="/register" className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30">{t('nav.getStarted')}</Link>
+                  <Link to="/login" className="text-gray-700 hover:text-dark-blue-500 transition font-medium px-3 py-2 rounded-lg hover:bg-gray-50">{t('nav.login')}</Link>
+                  <Link to="/register" className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium">{t('nav.getStarted')}</Link>
                 </>
               )}
             </div>
@@ -166,32 +226,117 @@ export default function Navbar() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200">
-            <div className="px-4 py-4 space-y-3">
-              <Link to="/" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-2 rounded-lg transition ${isActive('/') ? 'bg-light-blue-50 text-dark-blue-500' : 'text-gray-700 hover:bg-gray-50'}`}>
+          <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+            <div className="px-4 py-4 space-y-1">
+              <Link 
+                to="/" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.home')}
               </Link>
-              <Link to="/properties" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-2 rounded-lg transition ${isActive('/properties') ? 'bg-light-blue-50 text-dark-blue-500' : 'text-gray-700 hover:bg-gray-50'}`}>
+              <Link 
+                to="/properties" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/properties') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.properties')}
               </Link>
-              <Link to="/about" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-2 rounded-lg transition ${isActive('/about') ? 'bg-light-blue-50 text-dark-blue-500' : 'text-gray-700 hover:bg-gray-50'}`}>
+              <Link 
+                to="/about" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/about') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.about')}
               </Link>
-              <Link to="/contact" onClick={() => setMobileMenuOpen(false)} className={`block px-4 py-2 rounded-lg transition ${isActive('/contact') ? 'bg-light-blue-50 text-dark-blue-500' : 'text-gray-700 hover:bg-gray-50'}`}>
+              <Link 
+                to="/contact" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/contact') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 {t('nav.contact')}
               </Link>
+              {role !== 'admin' && (
+                <Link 
+                  to="/subscriptions" 
+                  onClick={() => setMobileMenuOpen(false)} 
+                  className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                    isActive('/subscriptions') 
+                      ? 'bg-light-blue-50 text-dark-blue-600' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('nav.subscriptions')}
+                </Link>
+              )}
 
               {user ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition">{t('nav.dashboard')}</Link>
                   {/* Only users with role "users" can access favorites and bookings */}
                   {String(user?.role || '').toLowerCase() === 'users' && (
                     <>
-                      <Link to="/favorites" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition">{t('nav.favorites')}</Link>
-                      <Link to="/dashboard/bookings" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition">{t('nav.bookings')}</Link>
+                      <Link 
+                        to="/favorites" 
+                        onClick={() => setMobileMenuOpen(false)} 
+                        className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition ${
+                          isActive('/favorites') 
+                            ? 'bg-light-blue-50 text-dark-blue-600 font-medium' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 ${isActive('/favorites') ? 'fill-current' : ''}`} />
+                        <span>{t('nav.favorites')}</span>
+                      </Link>
+                      <Link 
+                        to="/dashboard/bookings" 
+                        onClick={() => setMobileMenuOpen(false)} 
+                        className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition ${
+                          isActive('/dashboard/bookings') 
+                            ? 'bg-light-blue-50 text-dark-blue-600 font-medium' 
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>{t('nav.bookings')}</span>
+                      </Link>
                     </>
                   )}
-                  <button onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition">Sign Out</button>
+                  <Link 
+                    to="/dashboard" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition ${
+                      isActive('/dashboard') 
+                        ? 'bg-light-blue-50 text-dark-blue-600 font-medium' 
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>{t('nav.dashboard')}</span>
+                  </Link>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <button 
+                    onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} 
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-md font-medium"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
                 </>
               ) : (
                 <>

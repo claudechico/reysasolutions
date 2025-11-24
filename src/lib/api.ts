@@ -213,7 +213,7 @@ export const bookingsApi = {
 		request<{ success: boolean; data: { bookings: BookingDto[] } }>(
 			`/bookings${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
 		),
-	getUserBookings: (params?: { page?: number; limit?: number; status?: string }) =>
+	getUserBookings: (params?: { page?: number; limit?: number; status?: string; type?: 'guest' | 'owner' | 'all' }) =>
 		request<{ success: boolean; data: { bookings: BookingDto[] } }>(
 			`/bookings/user-bookings${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
 		),

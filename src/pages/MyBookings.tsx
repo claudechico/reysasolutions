@@ -26,16 +26,32 @@ export default function MyBookings() {
     try {
       let res;
       if (activeTab === 'my-bookings') {
-        // Use user-bookings endpoint to get all bookings belonging to the user (as guest or property owner/agent)
-        res = await bookingsApi.getUserBookings();
+        // Use user-bookings endpoint to get bookings where user is the guest
+        res = await bookingsApi.getUserBookings({ type: 'guest', limit: 100 });
       } else {
-        // For property bookings, use the regular list endpoint with filters
-        const params = { all: 'true', ownProperties: 'true' } as any;
-        res = await bookingsApi.list(params);
+        // For property bookings, use getUserBookings with type='owner' to get bookings for user's properties
+        res = await bookingsApi.getUserBookings({ type: 'owner', limit: 100 });
       }
+      
+      console.log('MyBookings - Loaded bookings:', {
+        tab: activeTab,
+        count: res?.data?.bookings?.length || 0,
+        bookings: res?.data?.bookings?.map((b: any) => ({
+          id: b.id,
+          status: b.status,
+          propertyId: b.propertyId || b.property?.id,
+          propertyTitle: b.property?.title,
+        }))
+      });
+      
       setBookings(res?.data?.bookings || []);
     } catch (err: any) {
       console.error('Failed to load bookings', err);
+      console.error('Error details:', {
+        message: err?.message,
+        status: err?.status,
+        body: err?.body
+      });
       setBookings([]);
     } finally {
       setLoading(false);

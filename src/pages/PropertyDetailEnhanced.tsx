@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { propertiesApi, PropertyDto, reviewsApi, ReviewDto, favoritesApi } from '../lib/api';
+import { propertiesApi, PropertyDto, reviewsApi, ReviewDto, favoritesApi, usersApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart, Phone } from 'lucide-react';
 import { formatPrice } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 
@@ -30,6 +30,7 @@ export default function PropertyDetailEnhanced() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteId, setFavoriteId] = useState<string | number | null>(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [agentPhone, setAgentPhone] = useState<string | null>(null);
 
   useEffect(() => {
     loadProperty();
@@ -37,7 +38,88 @@ export default function PropertyDetailEnhanced() {
 
   const loadProperty = async () => {
     const res = await propertiesApi.getById(id!);
-    if (res?.property) setProperty(res.property);
+    if (res?.property) {
+      setProperty(res.property);
+      
+      // Try to extract agent phone number from property
+      const prop = res.property as any;
+      let phone = null;
+      
+      // First, try to get phone from agent object if included
+      if (prop?.agent) {
+        phone = prop.agent.phoneNumber || 
+                prop.agent.phone || 
+                prop.agent.phone_number ||
+                null;
+      }
+      
+      // If agent data is not included but agentId exists, try to fetch agent profile
+      // Note: The /users/:id endpoint might not be available, so we'll handle errors gracefully
+      if (!phone && prop?.agentId) {
+        try {
+          console.log('Fetching agent profile for agentId:', prop.agentId);
+          // Try the regular users API endpoint
+          const agentRes = await usersApi.get(prop.agentId);
+          if (agentRes?.user) {
+            phone = agentRes.user.phoneNumber || 
+                    (agentRes.user as any)?.phone || 
+                    (agentRes.user as any)?.phone_number || 
+                    null;
+            console.log('Agent profile fetched:', { phone, user: agentRes.user });
+          }
+        } catch (e: any) {
+          // If 404, the endpoint doesn't exist - this is expected if backend doesn't expose user details
+          if (e?.status === 404) {
+            console.warn('User profile endpoint not available. Backend should include phoneNumber in agent object.');
+          } else {
+            console.error('Failed to fetch agent data', e);
+          }
+        }
+      }
+      
+      // Fallback to owner phone if agent phone not found
+      if (!phone) {
+        if (prop?.owner) {
+          phone = prop.owner.phoneNumber || 
+                  prop.owner.phone || 
+                  prop.owner.phone_number ||
+                  null;
+        }
+      }
+      
+      // If owner data is not included but ownerId exists, try to fetch owner profile
+      if (!phone && prop?.ownerId) {
+        try {
+          console.log('Fetching owner profile for ownerId:', prop.ownerId);
+          const ownerRes = await usersApi.get(prop.ownerId);
+          if (ownerRes?.user) {
+            phone = ownerRes.user.phoneNumber || 
+                    (ownerRes.user as any)?.phone || 
+                    (ownerRes.user as any)?.phone_number || 
+                    null;
+            console.log('Owner profile fetched:', { phone, user: ownerRes.user });
+          }
+        } catch (e: any) {
+          // If 404, the endpoint doesn't exist - this is expected if backend doesn't expose user details
+          if (e?.status === 404) {
+            console.warn('User profile endpoint not available. Backend should include phoneNumber in owner object.');
+          } else {
+            console.error('Failed to fetch owner data', e);
+          }
+        }
+      }
+      
+      setAgentPhone(phone);
+      
+      // Log agent data for debugging
+      console.log('Property Contact Data:', {
+        agent: prop?.agent,
+        agentId: prop?.agentId,
+        owner: prop?.owner,
+        ownerId: prop?.ownerId,
+        finalPhone: phone,
+      });
+    }
     setLoading(false);
   };
 
@@ -529,12 +611,47 @@ export default function PropertyDetailEnhanced() {
                     Make an Inquiry
                   </button>
 
-                  <button
-                    onClick={() => navigate('/contact')}
-                    className="w-full border-2 border-dark-blue-500 text-dark-blue-500 px-6 py-3.5 rounded-lg hover:bg-light-blue-50 transition font-medium"
-                  >
-                    {t('property.contactAgent')}
-                  </button>
+                  {(() => {
+                    const userRole = user ? String((user as any).role || '').toLowerCase() : '';
+                    // Only users with role "users" can contact agent
+                    if (!user || userRole !== 'users') {
+                      return null;
+                    }
+                    
+                    const prop = property as any;
+                    const agentName = prop?.agent?.name || prop?.agent?.full_name || prop?.owner?.name || prop?.owner?.full_name || 'Agent';
+                    
+                    if (agentPhone) {
+                      return (
+                        <a
+                          href={`tel:${agentPhone}`}
+                          className="w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group"
+                        >
+                          <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                          <span>Call {agentName}</span>
+                          <span className="text-sm opacity-90">({agentPhone})</span>
+                        </a>
+                      );
+                    }
+                    
+                    // If no phone found, check if we have agent email as fallback
+                    const agentEmail = prop?.agent?.email || prop?.owner?.email || null;
+                    
+                    if (agentEmail) {
+                      return (
+                        <a
+                          href={`mailto:${agentEmail}`}
+                          className="w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group"
+                        >
+                          <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                          <span>Contact {agentName}</span>
+                        </a>
+                      );
+                    }
+                    
+                    // If no contact info found, don't show anything (cleaner UI)
+                    return null;
+                  })()}
 
                   {(() => {
                     const userRole = user ? String((user as any).role || '').toLowerCase() : '';
