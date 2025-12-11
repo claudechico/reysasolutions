@@ -1,6 +1,24 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5558';
 
+// Log the API URL being used (only in development)
+if (import.meta.env.DEV) {
+	console.log('API Base URL:', API_BASE_URL);
+}
+
 const API_BASE_PATH = '/api/v1';
+
+// Helper function to build full URL using API_BASE_URL
+function buildApiUrl(path: string): string {
+	// Ensure path starts with / and construct full path properly
+	const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+	const fullPath = normalizedPath.startsWith('/api/v1/') ? normalizedPath : 
+	                 normalizedPath.startsWith('/api/') ? normalizedPath.replace('/api/', '/api/v1/') :
+	                 `${API_BASE_PATH}${normalizedPath}`;
+	
+	// Remove trailing slash from API_BASE_URL if present, and ensure proper joining
+	const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+	return `${baseUrl}${fullPath}`;
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 	const token = localStorage.getItem('auth_token');
@@ -23,8 +41,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		});
 	}
 
-	const fullPath = path.startsWith('/api/') ? path : `${API_BASE_PATH}${path}`;
-	const res = await fetch(`${API_BASE_URL}${fullPath}`, { ...options, headers });
+	const url = buildApiUrl(path);
+	const res = await fetch(url, { ...options, headers });
 	const contentType = res.headers.get('content-type') || '';
 	const isJson = contentType.includes('application/json');
 	let body: any;
@@ -75,8 +93,6 @@ async function publicRequest<T>(path: string, options: RequestInit = {}): Promis
 	delete headers.Authorization;
 	delete headers.authorization;
 
-	const fullPath = path.startsWith('/api/') ? path : `${API_BASE_PATH}${path}`;
-	
 	// Create clean options without any auth-related headers
 	const cleanOptions: RequestInit = {
 		method: options.method,
@@ -84,7 +100,8 @@ async function publicRequest<T>(path: string, options: RequestInit = {}): Promis
 		headers,
 	};
 	
-	const res = await fetch(`${API_BASE_URL}${fullPath}`, cleanOptions);
+	const url = buildApiUrl(path);
+	const res = await fetch(url, cleanOptions);
 	const contentType = res.headers.get('content-type') || '';
 	const isJson = contentType.includes('application/json');
 	let body: any;
@@ -180,6 +197,8 @@ export interface PropertyDto {
 	amenities?: string[];
 	categoryId?: string | number | null;
 	category?: { id: string | number; name: string } | null;
+	view_count?: number;
+	views?: number;
 }
 
 
@@ -197,6 +216,9 @@ export const propertiesApi = {
 		),
 	getById: (id: string | number) =>
 		request<{ success: boolean; property: PropertyDto }>(`/properties/${id}`),
+	// Increment view count for a property (public endpoint - no auth required)
+	incrementViews: (id: string | number) =>
+		publicRequest<{ success: boolean; message?: string }>(`/properties/${id}/increment-views`, { method: 'POST' }),
 };
 
 export interface BookingDto {
@@ -360,8 +382,8 @@ export const propertiesApiExtended = {
 			headers.Authorization = `Bearer ${token}`;
 		}
 		// Don't set Content-Type - let browser set it with boundary for FormData
-		const fullPath = `${API_BASE_PATH}/properties/${id}/media`;
-		const res = await fetch(`${API_BASE_URL}${fullPath}`, {
+		const url = buildApiUrl(`/properties/${id}/media`);
+		const res = await fetch(url, {
 			method: 'POST',
 			body: formData,
 			headers
@@ -395,15 +417,6 @@ export const subscriptionsApi = {
 	getStatus: (id: string | number) => request(`/subscriptions/${id}/status`),
 };
 
-export const inquiriesApi = {
-	create: (propertyId: string | number, payload: { message: string; name?: string; email?: string }) =>
-		request<{ success: boolean; inquiry: any }>(`/properties/${propertyId}/inquiries`, {
-			method: 'POST',
-			body: JSON.stringify(payload),
-		}),
-	listByProperty: (propertyId: string | number) =>
-		request<{ success: boolean; inquiries: any[] }>(`/properties/${propertyId}/inquiries`),
-};
 
 export const favoritesApi = {
 	create: (payload: { propertyId: string | number; note?: string }) =>
@@ -457,6 +470,143 @@ export const reviewsApi = {
 		request<{ message: string; review: ReviewDto }>(`/reviews`, {
 			method: 'POST',
 			body: JSON.stringify({ propertyId, ...payload }),
+		}),
+};
+
+export interface AdvertisementDto {
+	id: string | number;
+	title: string;
+	description?: string;
+	images?: string[] | Array<{ path?: string; url?: string; media_url?: string }>;
+	propertyId?: string | number | null;
+	categoryId?: string | number | null;
+	phoneNumber?: string | null;
+	startDate?: string | null;
+	endDate?: string | null;
+	price?: number | null;
+	isActive?: boolean;
+	createdBy?: string | number;
+	createdAt?: string;
+	updatedAt?: string;
+	property?: PropertyDto;
+	category?: CategoryDto;
+	creator?: BackendUser;
+}
+
+export const advertisementsApi = {
+	list: (params?: { page?: number; limit?: number; isActive?: boolean }) =>
+		publicRequest<{ success: boolean; advertisements: AdvertisementDto[]; total: number; page: number; limit: number }>(
+			`/advertisements${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
+		),
+	get: (id: string | number) =>
+		publicRequest<{ success: boolean; advertisement: AdvertisementDto }>(`/advertisements/${id}`),
+	create: (payload: {
+		title: string;
+		description?: string;
+		images?: string[] | Array<{ path?: string; url?: string }>;
+		propertyId?: string | number | null;
+		categoryId?: string | number | null;
+		phoneNumber?: string | null;
+		startDate?: string | null;
+		endDate?: string | null;
+		price?: number | null;
+		isActive?: boolean;
+	}) =>
+		request<{ success: boolean; message: string; advertisement: AdvertisementDto }>(`/advertisements`, {
+			method: 'POST',
+			body: JSON.stringify(payload),
+		}),
+	update: (id: string | number, payload: Partial<{
+		title?: string;
+		description?: string;
+		images?: string[] | Array<{ path?: string; url?: string }>;
+		propertyId?: string | number | null;
+		categoryId?: string | number | null;
+		phoneNumber?: string | null;
+		startDate?: string | null;
+		endDate?: string | null;
+		price?: number | null;
+		isActive?: boolean;
+	}>) =>
+		request<{ success: boolean; message: string; advertisement: AdvertisementDto }>(`/advertisements/${id}`, {
+			method: 'PATCH',
+			body: JSON.stringify(payload),
+		}),
+	remove: (id: string | number) =>
+		request<{ success: boolean; message: string }>(`/advertisements/${id}`, {
+			method: 'DELETE',
+		}),
+};
+
+export interface AuctionDto {
+	id: string | number;
+	title: string;
+	description?: string;
+	images?: string[] | Array<{ path?: string; url?: string; media_url?: string }>;
+	propertyId?: string | number | null;
+	categoryId?: string | number | null;
+	phoneNumber?: string | null;
+	startDate?: string;
+	endDate?: string;
+	startingPrice?: number;
+	currentBid?: number;
+	reservePrice?: number | null;
+	bidIncrement?: number;
+	status?: 'pending' | 'active' | 'ended' | 'cancelled';
+	createdBy?: string | number;
+	createdAt?: string;
+	updatedAt?: string;
+	property?: PropertyDto;
+	category?: CategoryDto;
+	creator?: BackendUser;
+	winner?: BackendUser;
+}
+
+export const auctionsApi = {
+	list: (params?: { page?: number; limit?: number; status?: string; active?: boolean; propertyId?: string | number; categoryId?: string | number }) =>
+		publicRequest<{ success: boolean; auctions: AuctionDto[]; total: number; page: number; limit: number }>(
+			`/auctions${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`
+		),
+	get: (id: string | number) =>
+		publicRequest<{ success: boolean; auction: AuctionDto }>(`/auctions/${id}`),
+	create: (payload: {
+		title: string;
+		description?: string;
+		images?: string[] | Array<{ path?: string; url?: string }>;
+		propertyId?: string | number | null;
+		categoryId?: string | number | null;
+		phoneNumber?: string | null;
+		startDate: string;
+		endDate: string;
+		startingPrice: number;
+		reservePrice?: number | null;
+		bidIncrement?: number;
+	}) =>
+		request<{ success: boolean; message: string; auction: AuctionDto }>(`/auctions`, {
+			method: 'POST',
+			body: JSON.stringify(payload),
+		}),
+	update: (id: string | number, payload: Partial<{
+		title?: string;
+		description?: string;
+		images?: string[] | Array<{ path?: string; url?: string }>;
+		propertyId?: string | number | null;
+		categoryId?: string | number | null;
+		phoneNumber?: string | null;
+		startDate?: string;
+		endDate?: string;
+		startingPrice?: number;
+		reservePrice?: number | null;
+		bidIncrement?: number;
+		status?: string;
+	}>) =>
+		request<{ success: boolean; message: string; auction: AuctionDto }>(`/auctions/${id}`, {
+			method: 'PATCH',
+			body: JSON.stringify(payload),
+		}),
+	remove: (id: string | number) =>
+		request<{ success: boolean; message: string }>(`/auctions/${id}`, {
+			method: 'DELETE',
 		}),
 };
 
