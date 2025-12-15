@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { propertiesApi, PropertyDto, reviewsApi, ReviewDto, favoritesApi, usersApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart, Phone } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart, Phone, Eye } from 'lucide-react';
 import { formatPrice } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +34,20 @@ export default function PropertyDetailEnhanced() {
 
   useEffect(() => {
     loadProperty();
+    // Track view when property loads
+    const trackView = async () => {
+      if (!id) return;
+      try {
+        // Call the increment views endpoint (public, no auth required)
+        await propertiesApi.incrementViews(id);
+      } catch (e) {
+        // Silently fail - view tracking shouldn't break the page
+        console.warn('Failed to track property view', e);
+      }
+    };
+    if (id) {
+      trackView();
+    }
   }, [id]);
 
   const loadProperty = async () => {
@@ -239,8 +253,8 @@ export default function PropertyDetailEnhanced() {
   }
 
   return (
-  <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div className="min-h-screen pt-20 sm:pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="mb-6">
             <button
             onClick={() => navigate('/properties')}
@@ -252,7 +266,7 @@ export default function PropertyDetailEnhanced() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="relative h-96">
+          <div className="relative h-64 sm:h-80 md:h-96">
             {(() => {
               const base = (import.meta as any).env.VITE_API_URL || 'http://localhost:5558';
               const toUrl = (path: string) => path?.startsWith('http') ? path : `${base}/${path?.startsWith('uploads') ? path : `uploads/${path}`}`;
@@ -313,13 +327,13 @@ export default function PropertyDetailEnhanced() {
             )}
           </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               <div className="lg:col-span-2">
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h1 className="text-4xl font-bold text-gray-900">{property.title}</h1>
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{property.title}</h1>
                     </div>
                     {property.category && (
                       <div className="inline-block px-3 py-1 bg-light-blue-100 text-dark-blue-600 rounded-full text-sm font-medium mb-3">
@@ -330,17 +344,17 @@ export default function PropertyDetailEnhanced() {
                       <button
                         onClick={toggleFavorite}
                         disabled={favoriteLoading}
-                        className="inline-flex items-center space-x-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+                        className="inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 transition-all disabled:opacity-50 shadow-sm hover:shadow-md text-xs sm:text-sm"
                         title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                       >
                         <Heart 
-                          className={`w-5 h-5 transition-all ${
+                          className={`w-4 h-4 sm:w-5 sm:h-5 transition-all ${
                             isFavorited 
                               ? 'text-red-600 fill-red-600' 
                               : 'text-gray-400'
                           }`}
                         />
-                        <span className={`text-sm font-semibold ${
+                        <span className={`font-semibold ${
                           isFavorited ? 'text-red-600' : 'text-gray-600'
                         }`}>
                           {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
@@ -348,39 +362,44 @@ export default function PropertyDetailEnhanced() {
                       </button>
                     )}
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-dark-blue-500">Tsh {formatPrice(property.price)}</div>
+                  <div className="text-left sm:text-right">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-dark-blue-500">Tsh {formatPrice(property.price)}</div>
                     {property.price_per && property.price_per !== 'one_time' && (
-                      <div className="text-sm text-gray-600">{t('property.per')} {property.price_per}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{t('property.per')} {property.price_per}</div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center text-gray-600 mb-6">
-                  <MapPin className="w-5 h-5 mr-2 text-dark-blue-500" />
-                  <span className="text-lg">{property.location}, {property.city}, {property.state}</span>
+                <div className="flex items-center text-gray-600 mb-4 sm:mb-6">
+                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-dark-blue-500" />
+                  <span className="text-sm sm:text-base md:text-lg">{property.location}, {property.city}, {property.state}</span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
-                    <BedDouble className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-gray-900">{property.bedrooms}</p>
-                    <p className="text-sm text-gray-600">{t('property.bedrooms')}</p>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                  <div className="bg-light-blue-50 rounded-xl p-3 sm:p-4 text-center">
+                    <BedDouble className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500 mx-auto mb-2" />
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{property.bedrooms}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{t('property.bedrooms')}</p>
                   </div>
-                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
-                    <Bath className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-gray-900">{property.bathrooms}</p>
-                    <p className="text-sm text-gray-600">{t('property.bathrooms')}</p>
+                  <div className="bg-light-blue-50 rounded-xl p-3 sm:p-4 text-center">
+                    <Bath className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500 mx-auto mb-2" />
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{property.bathrooms}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{t('property.bathrooms')}</p>
                   </div>
-                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
-                    <Square className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-gray-900">{property.area}</p>
-                    <p className="text-sm text-gray-600">{t('property.sqft')}</p>
+                  <div className="bg-light-blue-50 rounded-xl p-3 sm:p-4 text-center">
+                    <Square className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500 mx-auto mb-2" />
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{property.area}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{t('property.sqft')}</p>
                   </div>
-                  <div className="bg-light-blue-50 rounded-xl p-4 text-center">
-                    <Home className="w-8 h-8 text-dark-blue-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-gray-900">{property.property_type}</p>
-                    <p className="text-sm text-gray-600">{t('property.type')}</p>
+                  <div className="bg-light-blue-50 rounded-xl p-3 sm:p-4 text-center">
+                    <Home className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500 mx-auto mb-2" />
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{property.property_type}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">{t('property.type')}</p>
+                  </div>
+                  <div className="bg-light-blue-50 rounded-xl p-3 sm:p-4 text-center">
+                    <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500 mx-auto mb-2" />
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{property.view_count || property.views || 0}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Views</p>
                   </div>
                 </div>
 
@@ -464,7 +483,7 @@ export default function PropertyDetailEnhanced() {
 
               <div className="border-t border-gray-200 pt-6 mt-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                  <Star className="w-6 h-6 text-yellow-500 mr-2" /> {t('property.reviews')}
+                  <Star className="w-6 h-6 text-yellow-500 mr-2" /> {t('property.reviews.title')}
                 </h2>
                     <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -485,13 +504,13 @@ export default function PropertyDetailEnhanced() {
                       }}
                       className="text-sm text-dark-blue-600 hover:underline"
                     >
-                      {t('property.writeReview')}
+                      {t('property.reviews.writeReview')}
                     </button>
                   </div>
                 </div>
 
                 {reviews.length === 0 ? (
-                  <p className="text-gray-600">{t('property.noReviews')}</p>
+                  <p className="text-gray-600">{t('property.reviews.noReviews')}</p>
                 ) : (
                   <div className="space-y-4">
                     {reviews.map(r => (
@@ -517,26 +536,26 @@ export default function PropertyDetailEnhanced() {
                           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded-lg text-sm">{reviewError}</div>
                         )}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('property.yourRating')}</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('property.reviews.yourRating')}</label>
                           <select
                             value={rating}
                             onChange={(e) => setRating(parseInt(e.target.value))}
                             className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
                           >
                             {[5,4,3,2,1].map(v => (
-                              <option key={v} value={v}>{v} {t('property.star', { count: v })}</option>
+                              <option key={v} value={v}>{v} {t('property.reviews.star', { count: v })}</option>
                             ))}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('property.yourReview')}</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{t('property.reviews.yourReview')}</label>
                           <textarea
                             required
                             rows={3}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
-                            placeholder={t('property.placeholderReview')}
+                            placeholder={t('property.reviews.placeholderReview')}
                           />
                         </div>
                         <button
@@ -544,7 +563,7 @@ export default function PropertyDetailEnhanced() {
                           disabled={reviewLoading}
                           className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition disabled:opacity-50"
                         >
-                          {reviewLoading ? t('property.submitting') : t('property.submitReview')}
+                          {reviewLoading ? t('property.reviews.submitting') : t('property.reviews.submitReview')}
                         </button>
                       </form>
                     );
@@ -557,7 +576,7 @@ export default function PropertyDetailEnhanced() {
                   } else {
                     return (
                       <div className="mt-4">
-                        <p className="text-gray-600 mb-3">{t('property.mustBe')}{' '}<button onClick={() => navigate('/login')} className="text-dark-blue-500 hover:underline">{t('property.loggedIn')}</button>{' '}{t('property.toPost')}</p>
+                        <p className="text-gray-600 mb-3">{t('property.reviews.mustBe')}{' '}<button onClick={() => navigate('/login')} className="text-dark-blue-500 hover:underline">{t('property.reviews.loggedIn')}</button>{' '}{t('property.reviews.toPost')}</p>
                       </div>
                     );
                   }
@@ -593,23 +612,6 @@ export default function PropertyDetailEnhanced() {
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{t('property.interestedTitle')}</h3>
                   <p className="text-gray-600 mb-6">{t('property.contactBlurb')}</p>
 
-                  <button
-                    onClick={() => {
-                      if (!user) {
-                        navigate('/login');
-                      } else {
-                        const userRole = String((user as any).role || '').toLowerCase();
-                        if (userRole !== 'users') {
-                          alert('Only regular users can make inquiries. Please login with a user account.');
-                          return;
-                        }
-                        navigate(`/properties/${id}/inquiry`);
-                      }
-                    }}
-                    className="w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 font-medium mb-3"
-                  >
-                    Make an Inquiry
-                  </button>
 
                   {(() => {
                     const userRole = user ? String((user as any).role || '').toLowerCase() : '';

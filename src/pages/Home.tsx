@@ -1,8 +1,8 @@
-import { Search, MapPin, BedDouble, Bath, Square, TrendingUp, Shield, Award, Users } from 'lucide-react';
+import { Search, MapPin, BedDouble, Bath, Square, TrendingUp, Shield, Award, Users, Eye, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { propertiesApi, PropertyDto, categoriesApi, CategoryDto, usersApi } from '../lib/api';
+import { propertiesApi, PropertyDto, categoriesApi, CategoryDto, usersApi, advertisementsApi, AdvertisementDto } from '../lib/api';
 import { formatPrice } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5558';
@@ -15,6 +15,32 @@ function toUrl(path?: string) {
   if (s.startsWith('/')) return `${API_BASE_URL}${s}`;
   if (s.startsWith('uploads')) return `${API_BASE_URL}/${s}`;
   return `${API_BASE_URL}/uploads/${s}`;
+}
+
+function resolveAdvertisementImage(ad: AdvertisementDto) {
+  if (ad.images && Array.isArray(ad.images) && ad.images.length > 0) {
+    const first = ad.images[0];
+    
+    // Handle base64 data URLs (data:image/...)
+    if (typeof first === 'string' && first.startsWith('data:image/')) {
+      return first;
+    }
+    
+    // If it's a regular string URL
+    if (typeof first === 'string') {
+      return toUrl(first) || null;
+    }
+    
+    // If it's an object with image properties
+    if (first && typeof first === 'object') {
+      const imgObj = first as { path?: string; media_url?: string; url?: string; filename?: string };
+      if (imgObj.path) return toUrl(imgObj.path) || null;
+      if (imgObj.media_url) return toUrl(imgObj.media_url) || null;
+      if (imgObj.url) return toUrl(imgObj.url) || null;
+      if (imgObj.filename) return toUrl(`/uploads/advertisements/images/${imgObj.filename}`) || null;
+    }
+  }
+  return null;
 }
 
 function resolvePropertyImage(property: PropertyDto) {
@@ -59,6 +85,8 @@ export default function Home() {
   const { user } = useAuth();
   const [properties, setProperties] = useState<PropertyDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [advertisements, setAdvertisements] = useState<AdvertisementDto[]>([]);
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [searchLocation, setSearchLocation] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [stats, setStats] = useState({
@@ -83,8 +111,18 @@ export default function Home() {
     loadProperties();
     loadCategories();
     loadStats();
+    loadAdvertisements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-rotate advertisements slideshow
+  useEffect(() => {
+    if (advertisements.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentAdIndex((prev) => (prev + 1) % advertisements.length);
+    }, 5000); // Change slide every 5 seconds
+    return () => clearInterval(interval);
+  }, [advertisements.length]);
 
   const loadProperties = async () => {
     try {
@@ -209,6 +247,25 @@ export default function Home() {
     }
   };
 
+  const loadAdvertisements = async () => {
+    try {
+      const res = await advertisementsApi.list({ page: 1, limit: 10, isActive: true });
+      if (res?.advertisements) {
+        setAdvertisements(res.advertisements);
+      }
+    } catch (err) {
+      console.error('Failed to load advertisements', err);
+    }
+  };
+
+  const nextSlide = () => {
+    setCurrentAdIndex((prev) => (prev + 1) % advertisements.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentAdIndex((prev) => (prev - 1 + advertisements.length) % advertisements.length);
+  };
+
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchLocation) params.append('location', searchLocation);
@@ -233,18 +290,18 @@ export default function Home() {
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: 'Trusted Service',
-      description: 'Transparent process with legal support at every step'
+      title: t('nav.trustedService'),
+      description: t('nav.trustedServiceDesc')
     },
     {
       icon: <Award className="w-8 h-8" />,
-      title: 'Premium Quality',
-      description: 'Curated selection of high-quality properties'
+      title: t('nav.premiumQuality'),
+      description: t('nav.premiumQualityDesc')
     },
     {
       icon: <Users className="w-8 h-8" />,
-      title: 'Expert Team',
-      description: 'Professional agents with years of experience'
+      title: t('nav.expertTeam'),
+      description: t('nav.expertTeamDesc')
     }
   ];
 
@@ -261,69 +318,196 @@ export default function Home() {
            {t('nav.dream2')}
             </p>
 
-            <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl shadow-light-blue-500/10 p-4 sm:p-6">
+            <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl shadow-light-blue-500/20 p-6 sm:p-8 border border-white/20 animate-fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="sm:col-span-2">
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-light-blue-500" />
                     <input
                       type="text"
-                      placeholder="Location"
+                      placeholder={t('nav.location')}
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none text-sm sm:text-base"
+                      className="input-professional pl-12"
                     />
                   </div>
                 </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none text-sm sm:text-base"
+                  className="input-professional"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">{t('nav.allCategories')}</option>
                   {categories.map((c) => (
                     <option key={c.id} value={String(c.id)}>{c.name}</option>
                   ))}
                 </select>
                 <button
                   onClick={handleSearch}
-                  className="bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 sm:px-8 py-3 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition flex items-center justify-center space-x-2 shadow-lg shadow-light-blue-500/30 text-sm sm:text-base font-medium"
+                  className="btn-primary flex items-center justify-center space-x-2"
                 >
                   <Search className="w-5 h-5" />
-                  <span>Search</span>
+                  <span>{t('nav.search')}</span>
                 </button>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
-            <div className="bg-white rounded-xl p-4 sm:p-6 text-center shadow-lg shadow-light-blue-500/5 border border-gray-100">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-light-blue-500 to-dark-blue-600 bg-clip-text text-transparent mb-2">
+            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
                 {stats.propertiesListed > 0 ? stats.propertiesListed.toLocaleString() : '10K+'}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Properties Listed</div>
+              <div className="text-sm font-medium text-gray-600">{t('nav.propertiesListed')}</div>
             </div>
-            <div className="bg-white rounded-xl p-4 sm:p-6 text-center shadow-lg shadow-light-blue-500/5 border border-gray-100">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-light-blue-500 to-dark-blue-600 bg-clip-text text-transparent mb-2">
+            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.2s' }}>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
                 {stats.happyClients > 0 ? stats.happyClients.toLocaleString() : '5K+'}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Happy Clients</div>
+              <div className="text-sm font-medium text-gray-600">{t('nav.happyClients')}</div>
             </div>
-            <div className="bg-white rounded-xl p-4 sm:p-6 text-center shadow-lg shadow-light-blue-500/5 border border-gray-100">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-light-blue-500 to-dark-blue-600 bg-clip-text text-transparent mb-2">
+            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.3s' }}>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
                 {stats.expertAgents > 0 ? stats.expertAgents.toLocaleString() : '500+'}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Expert Agents</div>
+              <div className="text-sm font-medium text-gray-600">{t('nav.expertAgents')}</div>
             </div>
-            <div className="bg-white rounded-xl p-4 sm:p-6 text-center shadow-lg shadow-light-blue-500/5 border border-gray-100">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-light-blue-500 to-dark-blue-600 bg-clip-text text-transparent mb-2">
+            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.4s' }}>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
                 {stats.yearsExperience}
               </div>
-              <div className="text-xs sm:text-sm text-gray-600">Years Experience</div>
+              <div className="text-sm font-medium text-gray-600">{t('nav.yearsExperience')}</div>
             </div>
           </div>
           </div>
       </section>
+
+      {/* Advertisements Slideshow Banner */}
+      {advertisements.length > 0 && (
+        <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+              <div className="relative h-64 sm:h-80 md:h-96 lg:h-[500px] overflow-hidden">
+                {advertisements.map((ad, index) => {
+                  const imageUrl = resolveAdvertisementImage(ad);
+                  const isActive = index === currentAdIndex;
+                  return (
+                    <div
+                      key={ad.id}
+                      className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                        isActive 
+                          ? 'opacity-100 scale-100 z-10' 
+                          : 'opacity-0 scale-105 z-0'
+                      }`}
+                    >
+                      <div className="relative h-full w-full">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={ad.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-light-blue-500 via-dark-blue-500 to-purple-600"></div>
+                        )}
+                        {/* Gradient overlay for better text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20"></div>
+                        
+                        {/* Content */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center text-white px-4 sm:px-6 max-w-4xl w-full font-sans">
+                            <div className="mb-4 sm:mb-6">
+                              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 sm:mb-4 drop-shadow-2xl leading-tight font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                {ad.title}
+                              </h2>
+                              {ad.description && (
+                                <p className="text-sm sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 line-clamp-2 drop-shadow-lg max-w-3xl mx-auto font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  {ad.description}
+                                </p>
+                              )}
+                            </div>
+                            
+                            {ad.price && (
+                              <div className="mb-4 sm:mb-6">
+                                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  Tsh {formatPrice(ad.price)}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Action Buttons */}
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-8">
+                              {ad.phoneNumber && (
+                                <a
+                                  href={`tel:${ad.phoneNumber.replace(/\s+/g, '')}`}
+                                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all font-semibold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transform duration-200 font-sans"
+                                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                                >
+                                  <Phone className="w-5 h-5 sm:w-6 sm:h-6" />
+                                  <span>{t('nav.callNow')}</span>
+                                </a>
+                              )}
+                              <button
+                                onClick={() => navigate('/advertisements')}
+                                className="inline-flex items-center space-x-2 bg-white text-dark-blue-500 px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:bg-light-blue-50 transition-all font-semibold text-base sm:text-lg shadow-2xl hover:scale-105 transform duration-200 font-sans"
+                                style={{ fontFamily: "'Poppins', sans-serif" }}
+                              >
+                                <Eye className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <span>{t('nav.viewAll')}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Navigation arrows */}
+                {advertisements.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevSlide}
+                      className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-dark-blue-500 p-3 md:p-4 rounded-full shadow-2xl transition-all z-20 hover:scale-110 backdrop-blur-sm"
+                      aria-label="Previous slide"
+                    >
+                      <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+                    </button>
+                    <button
+                      onClick={nextSlide}
+                      className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-dark-blue-500 p-3 md:p-4 rounded-full shadow-2xl transition-all z-20 hover:scale-110 backdrop-blur-sm"
+                      aria-label="Next slide"
+                    >
+                      <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+                    </button>
+                  </>
+                )}
+
+                {/* Dots indicator */}
+                {advertisements.length > 1 && (
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+                    {advertisements.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentAdIndex(index)}
+                        className={`transition-all duration-300 rounded-full ${
+                          index === currentAdIndex
+                            ? 'bg-white w-12 h-3 shadow-lg'
+                            : 'bg-white/50 w-3 h-3 hover:bg-white/75 hover:w-8'
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section id="categories" className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -338,16 +522,19 @@ export default function Home() {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/properties?category=${encodeURIComponent(String(c.name))}&categoryId=${encodeURIComponent(String(c.id))}`)}
-                  className="bg-gradient-to-br from-light-blue-50 to-white p-6 rounded-2xl shadow hover:shadow-lg transition cursor-pointer border border-gray-100 hover:border-light-blue-300"
+                  className="card-elevated p-6 cursor-pointer hover-lift group"
                 >
-                  <h3 className="text-lg font-semibold text-dark-blue-600">{c.name}</h3>
-                  {c.description && <p className="text-sm text-gray-600 mt-2">{c.description}</p>}
+                  <div className="w-12 h-12 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <MapPin className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gradient mb-2">{c.name}</h3>
+                  {c.description && <p className="text-sm text-gray-600">{c.description}</p>}
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-600">No categories available.</p>
+              <p className="text-gray-600">{t('nav.noCategories')}</p>
             </div>
           )}
         </div>
@@ -370,45 +557,50 @@ export default function Home() {
                 <div
                   key={property.id}
                   onClick={() => navigate(`/properties/${property.id}`)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group cursor-pointer"
+                  className="card-elevated overflow-hidden group cursor-pointer hover-lift animate-fade-in"
                 >
-                  <div className="relative overflow-hidden">
+                  <div className="relative overflow-hidden h-64">
                     <img
                       src={resolvePropertyImage(property) || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                       alt={property.title}
-                      className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       onError={(e) => {
                         const ph = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                         if ((e.currentTarget as HTMLImageElement).src !== ph) (e.currentTarget as HTMLImageElement).src = ph;
                       }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     {property.featured && (
-                      <div className="absolute top-4 left-4 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
-                        Featured
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl backdrop-blur-sm">
+                        ⭐ {t('nav.featured')}
                       </div>
                     )}
-                    <div className="absolute top-4 right-4 bg-white text-dark-blue-500 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-dark-blue-600 px-4 py-2 rounded-xl text-sm font-bold shadow-xl">
                       Tsh {formatPrice(property.price)}
                     </div>
                   </div>
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{property.title}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-light-blue-600 transition-colors">{property.title}</h3>
                     <div className="flex items-center text-gray-600 mb-4">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{property.city}, {property.state}</span>
+                      <MapPin className="w-4 h-4 mr-2 text-light-blue-500" />
+                      <span className="text-sm font-medium">{property.city}, {property.state}</span>
                     </div>
                     <div className="flex items-center justify-between text-gray-600 border-t border-gray-100 pt-4">
-                      <div className="flex items-center">
-                        <BedDouble className="w-4 h-4 mr-1 text-light-blue-500" />
-                        <span className="text-sm font-medium">{property.bedrooms}</span>
+                      <div className="flex items-center space-x-1">
+                        <BedDouble className="w-4 h-4 text-light-blue-500" />
+                        <span className="text-sm font-semibold">{property.bedrooms}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Bath className="w-4 h-4 mr-1 text-light-blue-500" />
-                        <span className="text-sm font-medium">{property.bathrooms}</span>
+                      <div className="flex items-center space-x-1">
+                        <Bath className="w-4 h-4 text-light-blue-500" />
+                        <span className="text-sm font-semibold">{property.bathrooms}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Square className="w-4 h-4 mr-1 text-light-blue-500" />
-                        <span className="text-sm font-medium">{property.area} sqft</span>
+                      <div className="flex items-center space-x-1">
+                        <Square className="w-4 h-4 text-light-blue-500" />
+                        <span className="text-sm font-semibold">{property.area}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Eye className="w-4 h-4 text-light-blue-500" />
+                        <span className="text-sm font-semibold">{property.view_count || property.views || 0}</span>
                       </div>
                     </div>
                   </div>
@@ -417,16 +609,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-600">No properties available at the moment.</p>
+              <p className="text-gray-600">{t('nav.noProperties')}</p>
             </div>
           )}
 
           <div className="text-center mt-12">
             <button
               onClick={() => navigate('/properties')}
-              className="bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-8 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 font-medium"
+              className="btn-primary px-10 py-4 text-lg"
             >
-           {t('nav.view')}
+              {t('nav.view')}
             </button>
           </div>
         </div>
@@ -447,37 +639,39 @@ export default function Home() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group"
+                className="card-elevated p-8 group hover-lift animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 text-white w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-light-blue-500/30">
+                <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-light-blue-500/40">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gradient transition-colors">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-light-blue-500 to-dark-blue-600">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-light-blue-500 via-dark-blue-500 to-dark-blue-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGMwIDMuMzE0LTIuNjg2IDYtNiA2cy02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiA2IDIuNjg2IDYgNnoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L2c+PC9zdmc+')] opacity-20"></div>
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 text-shadow-lg">
             {t('nav.ready')}
           </h2>
-          <p className="text-xl text-light-blue-100 mb-8">
-          {t('nav.ready2')}
+          <p className="text-xl md:text-2xl text-white/90 mb-10 leading-relaxed">
+            {t('nav.ready2')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate('/contact')}
-              className="bg-white text-dark-blue-500 px-8 py-4 rounded-lg hover:bg-light-blue-50 transition font-medium shadow-xl"
+              className="btn-secondary bg-white text-dark-blue-600 px-10 py-4 text-lg font-bold"
             >
-              Schedule Consultation
+              {t('nav.scheduleConsultation')}
             </button>
             <button
               onClick={() => navigate('/properties')}
-              className="bg-dark-blue-500 text-white px-8 py-4 rounded-lg hover:bg-dark-blue-600 transition font-medium border-2 border-white/20"
+              className="bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-10 py-4 rounded-xl hover:bg-white/20 transition-all font-bold text-lg shadow-xl hover:scale-105"
             >
               {t('nav.browse3')}
             </button>

@@ -13,16 +13,20 @@ import {
   Menu,
   X,
   Tag,
+  Megaphone,
+  Gavel,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,6 +37,14 @@ export default function AdminSidebar() {
     if (path === '/admin') {
       return location.pathname === '/admin';
     }
+    // Special handling for advertisements routes
+    if (path === '/admin/advertisements/new') {
+      return location.pathname.startsWith('/admin/advertisements') || location.pathname.startsWith('/dashboard/advertisements');
+    }
+    // Special handling for auctions routes
+    if (path === '/admin/auctions/new') {
+      return location.pathname.startsWith('/admin/auctions') || location.pathname.startsWith('/dashboard/auctions');
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -41,6 +53,8 @@ export default function AdminSidebar() {
     { path: '/admin/users', label: 'Users', icon: Users },
     { path: '/admin/properties', label: 'Properties', icon: Building2 },
     { path: '/admin/categories', label: 'Categories', icon: Tag },
+    { path: '/admin/advertisements/new', label: 'Advertisements', icon: Megaphone },
+    { path: '/admin/auctions/new', label: 'Auctions', icon: Gavel },
     { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
     { path: '/admin/payments', label: 'Payments', icon: CreditCard },
     { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
@@ -134,7 +148,7 @@ export default function AdminSidebar() {
           className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-all"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">Sign Out</span>
+          <span className="font-medium">{t('nav.signOut')}</span>
         </button>
       </div>
     </div>
