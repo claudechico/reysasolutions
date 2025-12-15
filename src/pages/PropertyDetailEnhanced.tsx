@@ -403,10 +403,10 @@ export default function PropertyDetailEnhanced() {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 pt-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('property.description')}</h2>
-                  <div className="mb-8">
-                    <p className="text-gray-600 leading-relaxed">
+                <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{t('property.description')}</h2>
+                  <div className="mb-6 sm:mb-8">
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                       {property.description || t('property.defaultDescription')}
                     </p>
                   </div>
@@ -420,8 +420,8 @@ export default function PropertyDetailEnhanced() {
                         <MapPin className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Location</h2>
-                        <p className="text-gray-600 text-sm">Exact property location on map</p>
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Location</h2>
+                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">Exact property location on map</p>
                       </div>
                     </div>
                     
@@ -482,7 +482,7 @@ export default function PropertyDetailEnhanced() {
               })()}
 
               <div className="border-t border-gray-200 pt-6 mt-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center leading-tight">
                   <Star className="w-6 h-6 text-yellow-500 mr-2" /> {t('property.reviews.title')}
                 </h2>
                     <div className="mb-4 flex items-center justify-between">
@@ -584,7 +584,7 @@ export default function PropertyDetailEnhanced() {
               </div>
 
                 <div className="border-t border-gray-200 pt-6 mt-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('property.details')}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{t('property.details')}</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-start space-x-3">
                       <Calendar className="w-5 h-5 text-dark-blue-500 mt-1" />
@@ -608,9 +608,9 @@ export default function PropertyDetailEnhanced() {
               </div>
 
               <div className="lg:col-span-1">
-                <div className="bg-gradient-to-br from-light-blue-50 to-white rounded-2xl p-6 border border-light-blue-100 sticky top-24">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">{t('property.interestedTitle')}</h3>
-                  <p className="text-gray-600 mb-6">{t('property.contactBlurb')}</p>
+                <div className="bg-gradient-to-br from-light-blue-50 to-white rounded-2xl p-4 sm:p-6 border border-light-blue-100 sticky top-24">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">{t('property.interestedTitle')}</h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed">{t('property.contactBlurb')}</p>
 
 
                   {(() => {
@@ -676,7 +676,7 @@ export default function PropertyDetailEnhanced() {
                     } else if (user) {
                       return (
                         <div className="mt-4">
-                          <p className="text-sm text-gray-600 text-center">Only regular users can make bookings. Agents and owners cannot make bookings.</p>
+                          <p className="text-xs sm:text-sm text-gray-600 text-center leading-relaxed px-2">Only regular users can make bookings. Agents and owners cannot make bookings.</p>
                         </div>
                       );
                     } else {

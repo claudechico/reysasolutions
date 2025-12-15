@@ -310,12 +310,11 @@ export default function Home() {
   <section id="home" className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-dark-blue-700 via-dark-blue-500 to-light-blue-300">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 sm:mb-4 md:mb-6 leading-tight px-2 text-balance">
               {t('nav.dream')}
-              
             </h3>
-            <p className="text-base sm:text-lg md:text-xl text-light-blue-100 max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
-           {t('nav.dream2')}
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-light-blue-100 max-w-2xl mx-auto mb-4 sm:mb-6 md:mb-8 px-2 leading-relaxed text-pretty">
+              {t('nav.dream2')}
             </p>
 
             <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl shadow-light-blue-500/20 p-6 sm:p-8 border border-white/20 animate-fade-in">
@@ -354,29 +353,29 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
-            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
+            <div className="card-elevated p-4 sm:p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient mb-2 sm:mb-3 leading-tight">
                 {stats.propertiesListed > 0 ? stats.propertiesListed.toLocaleString() : '10K+'}
               </div>
-              <div className="text-sm font-medium text-gray-600">{t('nav.propertiesListed')}</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed">{t('nav.propertiesListed')}</div>
             </div>
-            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.2s' }}>
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
+            <div className="card-elevated p-4 sm:p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.2s' }}>
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient mb-2 sm:mb-3 leading-tight">
                 {stats.happyClients > 0 ? stats.happyClients.toLocaleString() : '5K+'}
               </div>
-              <div className="text-sm font-medium text-gray-600">{t('nav.happyClients')}</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed">{t('nav.happyClients')}</div>
             </div>
-            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.3s' }}>
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
+            <div className="card-elevated p-4 sm:p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.3s' }}>
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient mb-2 sm:mb-3 leading-tight">
                 {stats.expertAgents > 0 ? stats.expertAgents.toLocaleString() : '500+'}
               </div>
-              <div className="text-sm font-medium text-gray-600">{t('nav.expertAgents')}</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed">{t('nav.expertAgents')}</div>
             </div>
-            <div className="card-elevated p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.4s' }}>
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-gradient mb-3">
+            <div className="card-elevated p-4 sm:p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.4s' }}>
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient mb-2 sm:mb-3 leading-tight">
                 {stats.yearsExperience}
               </div>
-              <div className="text-sm font-medium text-gray-600">{t('nav.yearsExperience')}</div>
+              <div className="text-xs sm:text-sm font-medium text-gray-600 leading-relaxed">{t('nav.yearsExperience')}</div>
             </div>
           </div>
           </div>
@@ -511,9 +510,9 @@ export default function Home() {
 
       <section id="categories" className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{t('nav.browse')}</h2>
-            <p className="text-gray-600">{t('nav.browse2')}</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{t('nav.browse')}</h2>
+            <p className="text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl mx-auto px-4">{t('nav.browse2')}</p>
           </div>
 
                 {categories.length > 0 ? (
@@ -542,12 +541,12 @@ export default function Home() {
 
       <section id="properties" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
               {t('nav.featured')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                {t('nav.mot')}
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
+              {t('nav.mot')}
             </p>
           </div>
 
@@ -626,11 +625,11 @@ export default function Home() {
 
       <section id="services" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
               {t('nav.choose')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
               {t('nav.choose2')}
             </p>
           </div>
