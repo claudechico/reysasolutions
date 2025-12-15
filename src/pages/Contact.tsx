@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,10 +50,10 @@ export default function Contact() {
             <MessageCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 bg-clip-text">
-            Get in Touch
+            {t('contact.getInTouch')}
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            {t('contact.subtitle')}
           </p>
         </div>
 
@@ -63,9 +65,9 @@ export default function Contact() {
               <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-light-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                 <Phone className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Phone</h3>
-              <p className="text-gray-500 mb-4 text-sm">Mon - Fri: 8AM - 6PM</p>
-              <p className="text-gray-500 mb-4 text-sm">Sat: 9AM - 4PM</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('contact.phone')}</h3>
+              <p className="text-gray-500 mb-4 text-sm">{t('contact.phoneHours1')}</p>
+              <p className="text-gray-500 mb-4 text-sm">{t('contact.phoneHours2')}</p>
               <div className="space-y-2">
                 <a href="tel:+255684304594" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-lg">
                   +255 684 304 594
@@ -83,8 +85,8 @@ export default function Contact() {
               <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-light-blue-500/30 group-hover:scale-110 transition-transform duration-300">
                 <Mail className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Email</h3>
-              <p className="text-gray-500 mb-4 text-sm">We reply within 24 hours</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('contact.email')}</h3>
+              <p className="text-gray-500 mb-4 text-sm">{t('contact.emailResponse')}</p>
               <div className="space-y-2">
                 <a href="mailto:info@reysasolutions.co.tz" className="block text-light-blue-600 font-semibold hover:text-light-blue-700 transition-colors text-sm break-all">
                   info@reysasolutions.co.tz
@@ -105,8 +107,8 @@ export default function Contact() {
               <div className="bg-gradient-to-br from-purple-600 to-purple-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform duration-300">
                 <MapPin className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Visit Our Office</h3>
-              <p className="text-gray-500 mb-4 text-sm">Reysa Solutions Ltd</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('contact.visitOffice')}</h3>
+              <p className="text-gray-500 mb-4 text-sm">{t('contact.companyName')}</p>
               <p className="text-purple-600 font-semibold leading-relaxed">
                 Mbezi Beach<br />
                 Kinondoni, Dar es salaam<br />
@@ -123,13 +125,13 @@ export default function Contact() {
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-light-blue-500/5 to-transparent rounded-bl-full"></div>
             
             <div className="relative">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">Send us a Message</h2>
-              <p className="text-gray-500 mb-8">Fill out the form below and we'll get back to you</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('contact.sendMessage')}</h2>
+              <p className="text-gray-500 mb-8">{t('contact.formDescription')}</p>
 
               {submitted && (
                 <div className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-5 flex items-center space-x-3 animate-in fade-in slide-in-from-top-2">
                   <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
-                  <p className="text-green-800 font-semibold">Thank you for your message! We'll get back to you soon.</p>
+                  <p className="text-green-800 font-semibold">{t('contact.thankYouMessage')}</p>
                 </div>
               )}
 
@@ -137,7 +139,7 @@ export default function Contact() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Your Name *
+                      {t('contact.yourName')} *
                     </label>
                     <input
                       type="text"
@@ -146,13 +148,13 @@ export default function Contact() {
                       value={formData.name}
                       onChange={handleChange}
                       className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
-                      placeholder="John Doe"
+                      placeholder={t('contact.namePlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email Address *
+                      {t('contact.emailAddress')} *
                     </label>
                     <input
                       type="email"
@@ -161,7 +163,7 @@ export default function Contact() {
                       value={formData.email}
                       onChange={handleChange}
                       className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
-                      placeholder="you@example.com"
+                      placeholder={t('contact.emailPlaceholder')}
                     />
                   </div>
                 </div>
@@ -169,7 +171,7 @@ export default function Contact() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Phone Number
+                      {t('contact.phoneNumber')}
                     </label>
                     <input
                       type="tel"
@@ -177,13 +179,13 @@ export default function Contact() {
                       value={formData.phone}
                       onChange={handleChange}
                       className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
-                      placeholder="+255672232334"
+                      placeholder={t('contact.phonePlaceholder')}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Subject *
+                      {t('contact.subject')} *
                     </label>
                     <select
                       name="subject"
@@ -192,18 +194,18 @@ export default function Contact() {
                       onChange={handleChange}
                       className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all bg-white/50 backdrop-blur-sm"
                     >
-                      <option value="">Select a subject</option>
-                      <option value="buying">Buying a Property</option>
-                      <option value="selling">Selling a Property</option>
-                      <option value="inquiry">General Inquiry</option>
-                      <option value="support">Support</option>
+                      <option value="">{t('contact.selectSubject')}</option>
+                      <option value="buying">{t('contact.subjectBuying')}</option>
+                      <option value="selling">{t('contact.subjectSelling')}</option>
+                      <option value="general">{t('contact.subjectGeneral')}</option>
+                      <option value="support">{t('contact.subjectSupport')}</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Message *
+                    {t('contact.message')} *
                   </label>
                   <textarea
                     name="message"
@@ -212,7 +214,7 @@ export default function Contact() {
                     value={formData.message}
                     onChange={handleChange}
                     className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all resize-none bg-white/50 backdrop-blur-sm"
-                    placeholder="Tell us how we can help you..."
+                    placeholder={t('contact.messagePlaceholder')}
                   />
                 </div>
 
@@ -224,12 +226,12 @@ export default function Contact() {
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Sending...</span>
+                      <span>{t('contact.sending')}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      <span>Send Message</span>
+                      <span>{t('contact.sendMessageButton')}</span>
                     </>
                   )}
                 </button>
@@ -247,28 +249,28 @@ export default function Contact() {
                   <div className="bg-gradient-to-br from-amber-500 to-orange-500 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
                     <Clock className="w-6 h-6 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Office Hours</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{t('contact.officeHours')}</h2>
                 </div>
                 <div className="space-y-5">
                   <div className="flex items-start space-x-4 p-4 bg-gradient-to-r from-gray-50 to-transparent rounded-xl hover:bg-gray-100 transition-colors">
                     <Clock className="w-5 h-5 text-amber-600 mt-1 flex-shrink-0" />
                     <div>
-                      <p className="font-bold text-gray-900">Monday - Friday</p>
-                      <p className="text-gray-600">8:00 AM - 6:00 PM</p>
+                      <p className="font-bold text-gray-900">{t('contact.mondayFriday')}</p>
+                      <p className="text-gray-600">{t('contact.hours1')}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4 p-4 bg-gradient-to-r from-gray-50 to-transparent rounded-xl hover:bg-gray-100 transition-colors">
                     <Clock className="w-5 h-5 text-amber-600 mt-1 flex-shrink-0" />
                     <div>
-                      <p className="font-bold text-gray-900">Saturday</p>
-                      <p className="text-gray-600">9:00 AM - 4:00 PM</p>
+                      <p className="font-bold text-gray-900">{t('contact.saturday')}</p>
+                      <p className="text-gray-600">{t('contact.hours2')}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-4 p-4 bg-gradient-to-r from-green-50 to-transparent rounded-xl hover:bg-green-100 transition-colors">
                     <Clock className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                     <div>
-                      <p className="font-bold text-gray-900">Support</p>
-                      <p className="text-gray-600">Available 24/7</p>
+                      <p className="font-bold text-gray-900">{t('contact.support')}</p>
+                      <p className="text-gray-600">{t('contact.available247')}</p>
                     </div>
                   </div>
                 </div>
@@ -283,30 +285,30 @@ export default function Contact() {
                 <div className="bg-white/20 backdrop-blur-sm w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                   <MessageCircle className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Live Chat</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('contact.liveChat')}</h3>
                 <ul className="space-y-3 mb-8 text-light-blue-50">
                   <li className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
-                    <span>Available 24/7</span>
+                    <span>{t('contact.available247')}</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
-                    <span>Instant responses</span>
+                    <span>{t('contact.instantResponses')}</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
-                    <span>Expert assistance</span>
+                    <span>{t('contact.expertAssistance')}</span>
                   </li>
                   <li className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
-                    <span>Multi-language support</span>
+                    <span>{t('contact.multiLanguageSupport')}</span>
                   </li>
                 </ul>
                 <button
                   onClick={() => window.open('YOUR_CHAT_URL', '_blank')}
                   className="w-full bg-white text-dark-blue-500 px-6 py-4 rounded-xl hover:bg-light-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Start Chat Now
+                  {t('contact.startChatNow')}
                 </button>
               </div>
             </div>
@@ -316,8 +318,8 @@ export default function Contact() {
         {/* Map Section */}
         <div className="mt-16 relative">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Find Us</h2>
-            <p className="text-gray-600">Visit our office location</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('contact.findUs')}</h2>
+            <p className="text-gray-600">{t('contact.visitOfficeLocation')}</p>
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
             <div className="h-[500px] bg-gray-200 relative">

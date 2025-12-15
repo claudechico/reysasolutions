@@ -1,0 +1,36 @@
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+interface RoleProtectedRouteProps {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}
+
+export default function RoleProtectedRoute({ children, allowedRoles }: RoleProtectedRouteProps) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  const userRole = String((user as any).role || '').toLowerCase();
+  const normalizedAllowedRoles = allowedRoles.map(r => String(r).toLowerCase());
+  
+  if (!normalizedAllowedRoles.includes(userRole)) {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
+}
+

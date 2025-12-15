@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { propertiesApi, PropertyDto, reviewsApi, ReviewDto } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -300,21 +301,21 @@ export default function PropertyDetail() {
 
               <div className="lg:col-span-1">
                 <div className="bg-gradient-to-br from-light-blue-50 to-white rounded-2xl p-6 border border-light-blue-100 sticky top-24">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Interested in this property?</h3>
-                  <p className="text-gray-600 mb-6">Contact us to schedule a viewing or get more information.</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{t('property.interestedTitle')}</h3>
+                  <p className="text-gray-600 mb-6">{t('property.contactBlurb')}</p>
 
                   <button
                     onClick={() => navigate('/contact')}
                     className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium mb-3"
                   >
-                    Schedule Viewing
+                    {t('property.scheduleViewing')}
                   </button>
 
                   <button
                     onClick={() => navigate('/contact')}
                     className="w-full border-2 border-dark-blue-500 text-dark-blue-500 px-6 py-3.5 rounded-lg hover:bg-light-blue-50 transition font-medium"
                   >
-                    Contact Agent
+                    {t('property.contactAgent')}
                   </button>
 
                   <button
@@ -329,7 +330,7 @@ export default function PropertyDetail() {
                     }}
                     className="w-full mt-4 bg-dark-blue-600 text-white px-6 py-3 rounded-lg hover:bg-dark-blue-700 transition font-medium"
                   >
-                    Add Review
+                    {t('property.addReview')}
                   </button>
 
                   <div className="mt-6 pt-6 border-t border-gray-200">

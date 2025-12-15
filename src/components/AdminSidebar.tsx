@@ -103,14 +103,23 @@ export default function AdminSidebar() {
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-gray-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-sm font-bold">
-            {(user as any)?.name?.charAt(0)?.toUpperCase() || 'A'}
+      <div className="p-5 sm:p-6 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg flex-shrink-0">
+            {(user as any)?.name?.charAt(0)?.toUpperCase() || (user as any)?.email?.charAt(0)?.toUpperCase() || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{(user as any)?.name || 'Admin'}</p>
-            <p className="text-xs text-gray-400 truncate">{(user as any)?.email || ''}</p>
+            <p className="text-sm sm:text-base font-semibold text-white truncate mb-1">
+              {(user as any)?.name || (user as any)?.role === 'admin' ? 'System Admin' : 'Admin'}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-300 truncate mb-1">
+              {(user as any)?.email || ''}
+            </p>
+            {(user as any)?.role && (
+              <p className="text-xs text-light-blue-400 font-medium">
+                {(user as any).role.charAt(0).toUpperCase() + (user as any).role.slice(1)}
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { propertiesApi, PropertyDto, categoriesApi, favoritesApi } from '../lib/api';
 import { formatPrice } from '../lib/format';
-import { MapPin, BedDouble, Bath, Square, Search, SlidersHorizontal, Heart } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, Search, SlidersHorizontal, Heart, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 export default function Properties() {
@@ -283,15 +283,15 @@ export default function Properties() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Search & Filter</h3>
+        <div className="card-elevated p-6 sm:p-8 mb-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gradient">{t('property.searchFilter')}</h3>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 text-dark-blue-500 hover:text-dark-blue-600"
+              className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-light-blue-50 text-dark-blue-600 hover:bg-light-blue-100 transition font-medium"
             >
               <SlidersHorizontal className="w-5 h-5" />
-              <span>{showFilters ? 'Hide' : 'Show'} Filters</span>
+              <span>{showFilters ? t('property.hideFilters') : t('property.showFilters')}</span>
             </button>
           </div>
 
@@ -303,7 +303,7 @@ export default function Properties() {
                 <input
                   type="text"
                   name="location"
-                  placeholder="Search by city, state, or address"
+                  placeholder={t('property.searchPlaceholder')}
                   value={filters.location}
                   onChange={handleFilterChange}
                   className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
@@ -338,34 +338,34 @@ export default function Properties() {
               <input
                 type="number"
                 name="minPrice"
-                placeholder="Min Price"
+                placeholder={t('property.minPrice')}
                 value={filters.minPrice}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                className="input-professional"
               />
               <input
                 type="number"
                 name="maxPrice"
-                placeholder="Max Price"
+                placeholder={t('property.maxPrice')}
                 value={filters.maxPrice}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                className="input-professional"
               />
               <input
                 type="number"
                 name="bedrooms"
-                placeholder="Min Bedrooms"
+                placeholder={t('property.minBedrooms')}
                 value={filters.bedrooms}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                className="input-professional"
               />
               <input
                 type="number"
                 name="bathrooms"
-                placeholder="Min Bathrooms"
+                placeholder={t('property.minBathrooms')}
                 value={filters.bathrooms}
                 onChange={handleFilterChange}
-                className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                className="input-professional"
               />
             </div>
           )}
@@ -373,16 +373,16 @@ export default function Properties() {
           <div className="flex space-x-4">
             <button
               onClick={handleSearch}
-              className="flex-1 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 flex items-center justify-center space-x-2"
+              className="btn-primary flex-1 flex items-center justify-center space-x-2"
             >
               <Search className="w-5 h-5" />
-              <span>Search</span>
+              <span>{t('property.search')}</span>
             </button>
             <button
               onClick={clearFilters}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              className="btn-secondary px-8"
             >
-              Clear All
+              {t('property.clearAll')}
             </button>
           </div>
         </div>
@@ -390,19 +390,19 @@ export default function Properties() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-light-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading properties...</p>
+            <p className="text-gray-600">{t('property.loading')}</p>
           </div>
         ) : properties.length > 0 ? (
           <>
             <div className="mb-6 text-gray-600">
-              Found {properties.length} {properties.length === 1 ? 'property' : 'properties'}
+              {t('property.found', { count: properties.length, property: properties.length === 1 ? t('property.property') : t('property.properties') })}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {properties.map((property) => (
                 <div
                   key={property.id}
                   onClick={() => navigate(`/properties/${property.id}`)}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group cursor-pointer"
+                  className="card-elevated overflow-hidden group cursor-pointer hover-lift animate-fade-in"
                 >
                   <div className="relative overflow-hidden">
                     {(() => {
@@ -431,13 +431,14 @@ export default function Properties() {
                         />
                       );
                     })()}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     {property.featured && (
-                      <div className="absolute top-4 left-4 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-4 py-1.5 rounded-full text-sm font-medium shadow-lg">
-                        Featured
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl backdrop-blur-sm">
+                        ⭐ Featured
                       </div>
                     )}
                     <div className="absolute top-4 right-4 flex items-center space-x-2">
-                      <div className="bg-white text-dark-blue-500 px-4 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      <div className="bg-white/95 backdrop-blur-md text-dark-blue-600 px-4 py-2 rounded-xl text-sm font-bold shadow-xl">
                         Tsh {formatPrice(property.price)}
                       </div>
                       {user && String((user as any).role || '').toLowerCase() === 'users' && (
@@ -477,6 +478,10 @@ export default function Properties() {
                         <Square className="w-4 h-4 mr-1 text-light-blue-500" />
                         <span className="text-sm font-medium">{property.area} sqft</span>
                       </div>
+                      <div className="flex items-center">
+                        <Eye className="w-4 h-4 mr-1 text-light-blue-500" />
+                        <span className="text-sm font-medium">{property.view_count || property.views || 0}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -486,8 +491,8 @@ export default function Properties() {
         ) : (
           <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No properties found</h3>
-            <p className="text-gray-600 mb-6">Try adjusting your search filters</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('property.noPropertiesFound')}</h3>
+            <p className="text-gray-600 mb-6">{t('property.tryAdjustingFilters')}</p>
             <button
               onClick={clearFilters}
               className="bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30"

@@ -38,6 +38,8 @@ import {
   ShieldCheck,
   RefreshCw,
   Clock,
+  Megaphone,
+  Gavel,
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5558';
@@ -711,6 +713,20 @@ export default function AdminDashboard() {
                 Monitor platform performance, moderate incoming listings, and keep the marketplace healthy in one place.
               </p>
               <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2 sm:gap-4">
+                <button
+                  onClick={() => navigate('/admin/advertisements/new')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-medium text-white transition hover:from-purple-600 hover:to-pink-600 shadow-lg"
+                >
+                  <Megaphone className="h-4 w-4" />
+                  <span>Create Advertisement</span>
+                </button>
+                <button
+                  onClick={() => navigate('/admin/auctions/new')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2 text-sm font-medium text-white transition hover:from-orange-600 hover:to-red-600 shadow-lg"
+                >
+                  <Gavel className="h-4 w-4" />
+                  <span>Create Auction</span>
+                </button>
                 <button
                   onClick={() => loadData(false)}
                   disabled={refreshing}

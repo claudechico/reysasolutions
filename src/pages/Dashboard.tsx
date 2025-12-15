@@ -279,7 +279,7 @@ export default function Dashboard() {
               if (userRole === 'admin') {
                 return (
                   <button
-                    onClick={() => navigate('/dashboard/advertisements/new')}
+                    onClick={() => navigate('/admin/advertisements/new')}
                     className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-lg hover:from-purple-600 hover:to-pink-600 transition shadow-lg shadow-purple-500/30 text-sm sm:text-base flex items-center justify-center space-x-2"
                   >
                     <Megaphone className="w-4 h-4" />
@@ -295,7 +295,7 @@ export default function Dashboard() {
               if (userRole === 'admin') {
                 return (
                   <button
-                    onClick={() => navigate('/dashboard/auctions/new')}
+                    onClick={() => navigate('/admin/auctions/new')}
                     className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-2.5 rounded-lg hover:from-orange-600 hover:to-red-600 transition shadow-lg shadow-orange-500/30 text-sm sm:text-base flex items-center justify-center space-x-2"
                   >
                     <Gavel className="w-4 h-4" />

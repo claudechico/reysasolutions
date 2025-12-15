@@ -9,5 +9,4 @@ export type Property = any;
 export type PropertyMedia = any;
 export type Booking = any;
 export type Message = any;
-export type Inquiry = any;
 export type Favorite = any;

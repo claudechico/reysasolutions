@@ -92,20 +92,28 @@ export default function Navbar() {
 
       {/* Main navigation */}
       <nav className="w-full bg-gradient-to-r from-dark-blue-50 via-light-blue-50 to-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full">
           <div className="flex justify-between items-center h-16 sm:h-20">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/images/logo.jpg" 
-                alt="ReysaSolution Logo" 
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-lg"
-              />
-              <span className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-dark-blue-500 to-dark-blue-700 bg-clip-text text-transparent">
-                ReysaSolution
-              </span>
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity flex-shrink-0 pl-2 sm:pl-4 lg:pl-6">
+              <div className="relative">
+                <img 
+                  src="/images/logo.jpg" 
+                  alt="ReysaSolution Logo" 
+                  className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 object-contain rounded-xl shadow-md border-2 border-white/20"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-light-blue-500/10 to-dark-blue-500/10 pointer-events-none"></div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-dark-blue-600 to-dark-blue-800 bg-clip-text text-transparent leading-tight">
+                  ReysaSolution
+                </span>
+                <span className="text-[10px] sm:text-xs md:text-sm text-dark-blue-500 font-medium -mt-1 hidden sm:block">
+                  REAL ESTATE
+                </span>
+              </div>
             </Link>
 
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-1 pr-4 sm:pr-6 lg:pr-8">
               <Link 
                 to="/" 
                 className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
@@ -146,6 +154,26 @@ export default function Navbar() {
               >
                 {t('nav.contact')}
               </Link>
+              <Link 
+                to="/advertisements" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/advertisements') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
+                {t('nav.advertisements')}
+              </Link>
+              <Link 
+                to="/auctions" 
+                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  isActive('/auctions') 
+                    ? 'text-dark-blue-600 bg-light-blue-50' 
+                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                }`}
+              >
+                {t('nav.auctions')}
+              </Link>
               {/* Show Subscriptions link only to non-admin users */}
               {role !== 'admin' && (
                 <Link 
@@ -161,7 +189,7 @@ export default function Navbar() {
               )}
             </div>
 
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-3 pr-2 sm:pr-4 lg:pr-6">
               {user ? (
                 <>
                   {/* Only users with role "users" can access favorites and bookings */}
@@ -208,7 +236,7 @@ export default function Navbar() {
                     className="flex items-center space-x-2 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-2 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all shadow-md hover:shadow-lg font-medium text-sm"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <span>{t('nav.signOut')}</span>
                   </button>
                 </>
               ) : (
@@ -271,6 +299,28 @@ export default function Navbar() {
                 }`}
               >
                 {t('nav.contact')}
+              </Link>
+              <Link 
+                to="/advertisements" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/advertisements') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {t('nav.advertisements')}
+              </Link>
+              <Link 
+                to="/auctions" 
+                onClick={() => setMobileMenuOpen(false)} 
+                className={`block px-4 py-2.5 rounded-lg transition font-medium ${
+                  isActive('/auctions') 
+                    ? 'bg-light-blue-50 text-dark-blue-600' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {t('nav.auctions')}
               </Link>
               {role !== 'admin' && (
                 <Link 
@@ -335,7 +385,7 @@ export default function Navbar() {
                     className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-md font-medium"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <span>{t('nav.signOut')}</span>
                   </button>
                 </>
               ) : (
