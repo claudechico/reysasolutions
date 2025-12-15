@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { propertiesApiExtended, usersApi, PropertyDto, favoritesApi, bookingsApi, BookingDto, BackendUser } from '../lib/api';
 import { formatPrice } from '../lib/format';
-import { Plus, MapPin, BedDouble, Bath, Square, Edit, Eye, Heart, Calendar, CheckCircle, XCircle, Clock, DollarSign, AlertCircle, MessageCircle } from 'lucide-react';
+import { Plus, MapPin, BedDouble, Bath, Square, Edit, Eye, Heart, Calendar, CheckCircle, XCircle, Clock, DollarSign, AlertCircle, Megaphone, Gavel } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
@@ -275,15 +275,31 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             {(() => {
               const userRole = String((user as any)?.role || '').toLowerCase();
-              // Only owners and agents can view inquiries
-              if (userRole === 'owner' || userRole === 'agent') {
+              // Only admin can create advertisements
+              if (userRole === 'admin') {
                 return (
                   <button
-                    onClick={() => navigate('/dashboard/inquiries')}
-                    className="w-full sm:w-auto bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-5 py-2.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 text-sm sm:text-base flex items-center justify-center space-x-2"
+                    onClick={() => navigate('/dashboard/advertisements/new')}
+                    className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-lg hover:from-purple-600 hover:to-pink-600 transition shadow-lg shadow-purple-500/30 text-sm sm:text-base flex items-center justify-center space-x-2"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Inquiries</span>
+                    <Megaphone className="w-4 h-4" />
+                    <span>{t('dashboard.createAdvertisement')}</span>
+                  </button>
+                );
+              }
+              return null;
+            })()}
+            {(() => {
+              const userRole = String((user as any)?.role || '').toLowerCase();
+              // Only admin can create auctions
+              if (userRole === 'admin') {
+                return (
+                  <button
+                    onClick={() => navigate('/dashboard/auctions/new')}
+                    className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-2.5 rounded-lg hover:from-orange-600 hover:to-red-600 transition shadow-lg shadow-orange-500/30 text-sm sm:text-base flex items-center justify-center space-x-2"
+                  >
+                    <Gavel className="w-4 h-4" />
+                    <span>{t('dashboard.createAuction')}</span>
                   </button>
                 );
               }
@@ -293,7 +309,7 @@ export default function Dashboard() {
               onClick={() => navigate('/dashboard/profile')}
               className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-5 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 text-sm sm:text-base"
             >
-              Profile
+              {t('dashboard.profile')}
             </button>
           </div>
         </div>
@@ -301,14 +317,14 @@ export default function Dashboard() {
         {isRegularUser ? (
           // Stats cards for regular users
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 shadow-lg border border-pink-200 hover:shadow-xl transition-all">
+            <div className="card-elevated p-6 bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200 hover-lift">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-pink-700 text-sm font-medium mb-1">{t('dashboard.totalFavorites')}</p>
-                  <p className="text-3xl font-bold text-pink-900">{favorites.length}</p>
+                  <p className="text-pink-700 text-sm font-semibold mb-2">{t('dashboard.totalFavorites')}</p>
+                  <p className="text-4xl font-bold text-pink-900">{favorites.length}</p>
                 </div>
-                <div className="bg-pink-200 p-3 rounded-lg">
-                  <Heart className="w-6 h-6 text-pink-600 fill-pink-600" />
+                <div className="bg-pink-200 p-4 rounded-xl shadow-lg">
+                  <Heart className="w-7 h-7 text-pink-600 fill-pink-600" />
                 </div>
               </div>
             </div>
@@ -382,16 +398,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="card-elevated p-6 hover-lift">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm mb-1">{t('dashboard.featured')}</p>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-gray-600 text-sm font-semibold mb-2">{t('dashboard.featured')}</p>
+                  <p className="text-4xl font-bold text-gradient">
                     {properties.filter(p => p.featured).length}
                   </p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <MapPin className="w-6 h-6 text-yellow-600" />
+                <div className="bg-yellow-100 p-4 rounded-xl shadow-lg">
+                  <MapPin className="w-7 h-7 text-yellow-600" />
                 </div>
               </div>
             </div>
@@ -401,7 +417,7 @@ export default function Dashboard() {
         {isRegularUser ? (
           <>
             {/* Favorites Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+            <div className="card-elevated p-6 sm:p-8 mb-6 animate-fade-in">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
                   <Heart className="w-6 h-6 text-pink-600" />
@@ -423,7 +439,7 @@ export default function Dashboard() {
                       <div
                         key={favorite.id}
                         onClick={() => navigate(`/properties/${property.id}`)}
-                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden border border-gray-200 hover:shadow-xl transition-all cursor-pointer group"
+                        className="card-elevated overflow-hidden cursor-pointer group hover-lift"
                       >
                         <div className="relative">
                           <img
@@ -594,25 +610,16 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 {(() => {
                   const userRole = String((user as any)?.role || '').toLowerCase();
-                  // Only agents and owners can create properties and view inquiries
+                  // Only agents and owners can create properties
                   if (userRole === 'agent' || userRole === 'owner') {
                     return (
-                      <>
-                        <button
-                          onClick={() => navigate('/dashboard/inquiries')}
-                          className="w-full sm:w-auto bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition shadow-lg shadow-light-blue-500/30 flex items-center justify-center space-x-2 text-sm sm:text-base"
-                        >
-                          <MessageCircle className="w-5 h-5" />
-                          <span>View Inquiries</span>
-                        </button>
-                        <button
-                          onClick={() => navigate('/dashboard/properties/new')}
-                          className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 flex items-center justify-center space-x-2 text-sm sm:text-base"
-                        >
-                          <Plus className="w-5 h-5" />
-                          <span>{t('dashboard.addProperty')}</span>
-                        </button>
-                      </>
+                      <button
+                        onClick={() => navigate('/dashboard/properties/new')}
+                        className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>{t('dashboard.addProperty')}</span>
+                      </button>
                     );
                   }
                   return null;

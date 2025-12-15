@@ -317,24 +317,24 @@ export default function Home() {
               {t('nav.dream2')}
             </p>
 
-            <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl shadow-light-blue-500/20 p-6 sm:p-8 border border-white/20 animate-fade-in">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl shadow-light-blue-500/20 p-4 sm:p-6 md:p-8 border border-white/20 animate-fade-in">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="sm:col-span-2">
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-4 w-5 h-5 text-light-blue-500" />
+                    <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-light-blue-500" />
                     <input
                       type="text"
                       placeholder={t('nav.location')}
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
-                      className="input-professional pl-12"
+                      className="input-professional pl-10 sm:pl-12 text-sm sm:text-base"
                     />
                   </div>
                 </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="input-professional"
+                  className="input-professional text-sm sm:text-base"
                 >
                   <option value="">{t('nav.allCategories')}</option>
                   {categories.map((c) => (
@@ -343,16 +343,16 @@ export default function Home() {
                 </select>
                 <button
                   onClick={handleSearch}
-                  className="btn-primary flex items-center justify-center space-x-2"
+                  className="btn-primary flex items-center justify-center space-x-1.5 sm:space-x-2 text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>{t('nav.search')}</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-8 sm:mt-12 md:mt-16">
             <div className="card-elevated p-4 sm:p-6 text-center hover-lift animate-scale-in" style={{ animationDelay: '0.1s' }}>
               <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gradient mb-2 sm:mb-3 leading-tight">
                 {stats.propertiesListed > 0 ? stats.propertiesListed.toLocaleString() : '10K+'}
@@ -383,10 +383,10 @@ export default function Home() {
 
       {/* Advertisements Slideshow Banner */}
       {advertisements.length > 0 && (
-        <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
+        <section className="py-6 sm:py-8 px-3 sm:px-4 md:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
           <div className="max-w-7xl mx-auto">
-            <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div className="relative h-64 sm:h-80 md:h-96 lg:h-[500px] overflow-hidden">
+            <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+              <div className="relative h-56 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] overflow-hidden">
                 {advertisements.map((ad, index) => {
                   const imageUrl = resolveAdvertisementImage(ad);
                   const isActive = index === currentAdIndex;
@@ -419,11 +419,11 @@ export default function Home() {
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center text-white px-4 sm:px-6 max-w-4xl w-full font-sans">
                             <div className="mb-4 sm:mb-6">
-                              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 sm:mb-4 drop-shadow-2xl leading-tight font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 sm:mb-4 drop-shadow-2xl leading-tight text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                 {ad.title}
                               </h2>
                               {ad.description && (
-                                <p className="text-sm sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 line-clamp-2 drop-shadow-lg max-w-3xl mx-auto font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                <p className="text-sm sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 line-clamp-2 drop-shadow-lg max-w-3xl mx-auto text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                   {ad.description}
                                 </p>
                               )}
@@ -431,30 +431,30 @@ export default function Home() {
                             
                             {ad.price && (
                               <div className="mb-4 sm:mb-6">
-                                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                   Tsh {formatPrice(ad.price)}
                                 </p>
                               </div>
                             )}
                             
                             {/* Action Buttons */}
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-8">
+                            <div className="flex flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8">
                               {ad.phoneNumber && (
                                 <a
                                   href={`tel:${ad.phoneNumber.replace(/\s+/g, '')}`}
-                                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all font-semibold text-base sm:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transform duration-200 font-sans"
+                                  className="inline-flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 lg:px-8 lg:py-4 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all font-semibold text-xs sm:text-sm md:text-base lg:text-lg shadow-2xl hover:shadow-green-500/50 hover:scale-105 transform duration-200 font-sans whitespace-nowrap"
                                   style={{ fontFamily: "'Poppins', sans-serif" }}
                                 >
-                                  <Phone className="w-5 h-5 sm:w-6 sm:h-6" />
+                                  <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
                                   <span>{t('nav.callNow')}</span>
                                 </a>
                               )}
                               <button
                                 onClick={() => navigate('/advertisements')}
-                                className="inline-flex items-center space-x-2 bg-white text-dark-blue-500 px-6 py-3 sm:px-8 sm:py-4 rounded-xl hover:bg-light-blue-50 transition-all font-semibold text-base sm:text-lg shadow-2xl hover:scale-105 transform duration-200 font-sans"
+                                className="inline-flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 bg-white text-dark-blue-500 px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 lg:px-8 lg:py-4 rounded-lg sm:rounded-xl hover:bg-light-blue-50 transition-all font-semibold text-xs sm:text-sm md:text-base lg:text-lg shadow-2xl hover:scale-105 transform duration-200 font-sans whitespace-nowrap"
                                 style={{ fontFamily: "'Poppins', sans-serif" }}
                               >
-                                <Eye className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6" />
                                 <span>{t('nav.viewAll')}</span>
                               </button>
                             </div>
@@ -516,18 +516,18 @@ export default function Home() {
           </div>
 
                 {categories.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {categories.map((c) => (
                 <div
                   key={c.id}
                   onClick={() => navigate(`/properties?category=${encodeURIComponent(String(c.name))}&categoryId=${encodeURIComponent(String(c.id))}`)}
-                  className="card-elevated p-6 cursor-pointer hover-lift group"
+                  className="card-elevated p-4 sm:p-5 md:p-6 cursor-pointer hover-lift group"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <MapPin className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-gradient mb-2">{c.name}</h3>
-                  {c.description && <p className="text-sm text-gray-600">{c.description}</p>}
+                  <h3 className="text-base sm:text-lg font-bold text-gradient mb-1 sm:mb-2 leading-tight">{c.name}</h3>
+                  {c.description && <p className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">{c.description}</p>}
                 </div>
               ))}
             </div>
@@ -551,14 +551,14 @@ export default function Home() {
           </div>
 
           {properties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               {properties.map((property) => (
                 <div
                   key={property.id}
                   onClick={() => navigate(`/properties/${property.id}`)}
                   className="card-elevated overflow-hidden group cursor-pointer hover-lift animate-fade-in"
                 >
-                  <div className="relative overflow-hidden h-64">
+                  <div className="relative overflow-hidden h-48 sm:h-56 md:h-64">
                     <img
                       src={resolvePropertyImage(property) || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                       alt={property.title}
@@ -634,43 +634,43 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="card-elevated p-8 group hover-lift animate-fade-in"
+                className="card-elevated p-5 sm:p-6 md:p-8 group hover-lift animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 text-white w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-light-blue-500/40">
+                <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 text-white w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-light-blue-500/40">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gradient transition-colors">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 group-hover:text-gradient transition-colors leading-tight">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-light-blue-500 via-dark-blue-500 to-dark-blue-600 relative overflow-hidden">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-light-blue-500 via-dark-blue-500 to-dark-blue-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGMwIDMuMzE0LTIuNjg2IDYtNiA2cy02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiA2IDIuNjg2IDYgNnoiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L2c+PC9zdmc+')] opacity-20"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 text-shadow-lg">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 sm:mb-5 md:mb-6 text-shadow-lg leading-tight px-2">
             {t('nav.ready')}
           </h2>
-          <p className="text-xl md:text-2xl text-white/90 mb-10 leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/90 mb-6 sm:mb-8 md:mb-10 leading-relaxed px-2">
             {t('nav.ready2')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-row sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center px-2">
             <button
               onClick={() => navigate('/contact')}
-              className="btn-secondary bg-white text-dark-blue-600 px-10 py-4 text-lg font-bold"
+              className="btn-secondary bg-white text-dark-blue-600 px-4 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg font-bold whitespace-nowrap"
             >
               {t('nav.scheduleConsultation')}
             </button>
             <button
               onClick={() => navigate('/properties')}
-              className="bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-10 py-4 rounded-xl hover:bg-white/20 transition-all font-bold text-lg shadow-xl hover:scale-105"
+              className="bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-4 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4 rounded-lg sm:rounded-xl hover:bg-white/20 transition-all font-bold text-xs sm:text-sm md:text-base lg:text-lg shadow-xl hover:scale-105 whitespace-nowrap"
             >
               {t('nav.browse3')}
             </button>

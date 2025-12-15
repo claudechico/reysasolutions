@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Home from './pages/Home';
 import Properties from './pages/Properties';
 import PropertyDetailEnhanced from './pages/PropertyDetailEnhanced';
@@ -31,8 +32,11 @@ import Payment from './pages/Payment';
 import Subscriptions from './pages/Subscriptions';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOTP from './pages/VerifyOTP';
-import Inquiry from './pages/Inquiry';
-import MyInquiries from './pages/MyInquiries';
+import Advertisements from './pages/Advertisements';
+import AdvertisementForm from './pages/AdvertisementForm';
+import Auctions from './pages/Auctions';
+import AuctionForm from './pages/AuctionForm';
+import AuctionDetail from './pages/AuctionDetail';
 
 function App() {
   return (
@@ -40,12 +44,14 @@ function App() {
       <AuthProvider>
         <div className="min-h-screen bg-white flex flex-col">
           <Navbar />
-          <main className="flex-grow">
+          <main className="flex-grow flex flex-col">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/properties" element={<Properties />} />
               <Route path="/properties/:id" element={<PropertyDetailEnhanced />} />
-              <Route path="/properties/:id/inquiry" element={<Inquiry />} />
+              <Route path="/advertisements" element={<Advertisements />} />
+              <Route path="/auctions" element={<Auctions />} />
+              <Route path="/auctions/:id" element={<AuctionDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/login" element={<Login />} />
@@ -91,19 +97,75 @@ function App() {
                 }
               />
               <Route
-                path="/dashboard/inquiries"
-                element={
-                  <ProtectedRoute>
-                    <MyInquiries />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/dashboard/profile"
                 element={
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/advertisements/new"
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AdvertisementForm />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/advertisements/:id/edit"
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AdvertisementForm />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/advertisements/new"
+                element={
+                  <AdminProtectedRoute>
+                    <AdvertisementForm />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/advertisements/:id/edit"
+                element={
+                  <AdminProtectedRoute>
+                    <AdvertisementForm />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/auctions/new"
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AuctionForm />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/auctions/:id/edit"
+                element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AuctionForm />
+                  </RoleProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/auctions/new"
+                element={
+                  <AdminProtectedRoute>
+                    <AuctionForm />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/auctions/:id/edit"
+                element={
+                  <AdminProtectedRoute>
+                    <AuctionForm />
+                  </AdminProtectedRoute>
                 }
               />
               <Route path="/payment" element={<Payment />} />
