@@ -330,10 +330,12 @@ export default function AdminManageProperties() {
   if (loading) {
     return (
       <AdminProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50 pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading properties...</p>
+        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading properties...</p>
+            </div>
           </div>
         </div>
       </AdminProtectedRoute>
@@ -346,8 +348,8 @@ export default function AdminManageProperties() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="flex-1 lg:ml-72">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -388,37 +390,42 @@ export default function AdminManageProperties() {
             </div>
           </div>
 
-          {/* Properties Table */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto -mx-3 sm:mx-0">
-              <table className="w-full min-w-[800px]">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                  <tr>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Property</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Agent</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">Created</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
+          {/* Properties - Mobile Card View */}
+          <div className="md:hidden space-y-3">
                   {props.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-3 sm:px-6 py-8 sm:py-12 text-center">
-                        <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-sm sm:text-base text-gray-600 font-medium">No properties found.</p>
-                      </td>
-                    </tr>
+              <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
+                <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-sm text-gray-600 font-medium">No properties found.</p>
+              </div>
                   ) : (
-                    props.map(p => (
-                      <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="flex items-start space-x-2 sm:space-x-4">
-                            <div className="h-12 w-12 sm:h-16 sm:w-16 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
+              props.map(p => {
+                const isApproved = isPropertyApproved(p);
+                const moderationStatus = p.moderationStatus || p.status || (isApproved ? 'approved' : 'pending');
+                const statusText = String(moderationStatus).toLowerCase();
+                const isRejected = statusText === 'rejected' || statusText === 'declined';
+                
+                let badgeClass = 'bg-yellow-100 text-yellow-800';
+                let badgeText = t('admin.manageProperties.pending');
+                let badgeIcon = <Calendar className="w-3 h-3 mr-1" />;
+                
+                if (isApproved || statusText === 'approved') {
+                  badgeClass = 'bg-green-100 text-green-800';
+                  badgeText = t('admin.manageProperties.approved');
+                  badgeIcon = <CheckCircle className="w-3 h-3 mr-1" />;
+                } else if (isRejected) {
+                  badgeClass = 'bg-red-100 text-red-800';
+                  badgeText = 'Rejected';
+                  badgeIcon = <XCircle className="w-3 h-3 mr-1" />;
+                }
+
+                return (
+                  <div key={p.id} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                    <div className="flex items-start space-x-3 mb-3">
+                      <div className="h-20 w-20 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
                               <img
                                 src={resolveImageUrl(p)}
                                 alt={p.title}
-                                className="h-12 w-12 sm:h-16 sm:w-16 object-cover"
+                          className="h-20 w-20 object-cover"
                                 onError={(e) => {
                                   const placeholder = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=600';
                                   const target = e.currentTarget as HTMLImageElement;
@@ -429,30 +436,110 @@ export default function AdminManageProperties() {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-xs sm:text-sm text-gray-900 mb-1 truncate">{p.title}</div>
-                              <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
+                        <div className="font-semibold text-sm text-gray-900 mb-1 truncate">{p.title}</div>
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
                                 <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
                                 <span className="truncate">{p.location || ''}{p.city ? `, ${p.city}` : ''}</span>
                               </div>
-                              <div className="flex items-center text-xs sm:text-sm font-medium text-dark-blue-500">
+                        <div className="flex items-center text-sm font-medium text-dark-blue-500 mb-2">
                                 <DollarSign className="w-3 h-3 mr-1 flex-shrink-0" />
                                 <span>Tsh {formatPrice(p.price)}</span>
                               </div>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+                          {badgeIcon}
+                          {badgeText}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2 mb-3 text-xs text-gray-600">
+                      <div><strong>Agent:</strong> {(p?.agent && typeof p.agent === 'object' ? (p.agent.name || p.agent.full_name) : p?.agent) || (p?.profiles?.full_name) || (p.owner && typeof p.owner === 'object' ? (p.owner.name || p.owner.full_name) : p.owner) || 'N/A'}</div>
+                      <div><strong>Created:</strong> {formatDate(p.created_at || p.createdAt || p.created)}</div>
+                    </div>
+                    <div className="flex items-center space-x-2 flex-wrap gap-2">
+                      <button
+                        onClick={() => window.open(`/properties/${p.id}`, '_blank')}
+                        className="flex-1 px-3 py-2 rounded-lg border border-light-blue-100 bg-light-blue-50 text-dark-blue-500 transition hover:border-blue-200 hover:bg-light-blue-100 text-sm font-medium flex items-center justify-center space-x-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View</span>
+                      </button>
+                      {!isApproved && (
+                        <>
+                          <button
+                            disabled={Boolean(actionLoading[`${p.id}-approve`])}
+                            onClick={() => setApproval(p.id, true)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-green-50 text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-70 text-sm font-medium flex items-center justify-center space-x-1"
+                          >
+                            {actionLoading[`${p.id}-approve`] ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Approve</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            disabled={Boolean(actionLoading[`${p.id}-decline`])}
+                            onClick={() => setApproval(p.id, false)}
+                            className="flex-1 px-3 py-2 rounded-lg bg-yellow-50 text-yellow-600 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-70 text-sm font-medium flex items-center justify-center space-x-1"
+                          >
+                            {actionLoading[`${p.id}-decline`] ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <XCircle className="w-4 h-4" />
+                                <span>Decline</span>
+                              </>
+                            )}
+                          </button>
+                        </>
+                      )}
+                      <button
+                        disabled={Boolean(actionLoading[`${p.id}-remove`])}
+                        onClick={() => remove(p.id)}
+                        className="flex-1 px-3 py-2 rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70 text-sm font-medium flex items-center justify-center space-x-1"
+                      >
+                        {actionLoading[`${p.id}-remove`] ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete</span>
+                          </>
+                        )}
+                      </button>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="text-xs sm:text-sm text-gray-900 truncate max-w-[150px]">
-                            {(p?.agent && typeof p.agent === 'object' ? (p.agent.name || p.agent.full_name) : p?.agent) ||
-                             (p?.profiles?.full_name) || 
-                             (p.owner && typeof p.owner === 'object' ? (p.owner.name || p.owner.full_name) : p.owner) || 
-                             'N/A'}
+                );
+              })
+            )}
                           </div>
+
+          {/* Properties - Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Property</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Agent</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {props.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center">
+                        <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-base text-gray-600 font-medium">No properties found.</p>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          {(() => {
+                    </tr>
+                  ) : (
+                    props.map(p => {
                             const isApproved = isPropertyApproved(p);
-                            // Get moderationStatus or fallback to status
                             const moderationStatus = p.moderationStatus || p.status || (isApproved ? 'approved' : 'pending');
                             const statusText = String(moderationStatus).toLowerCase();
                             const isRejected = statusText === 'rejected' || statusText === 'declined';
@@ -472,70 +559,105 @@ export default function AdminManageProperties() {
                             }
                             
                             return (
+                        <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-start space-x-4">
+                              <div className="h-16 w-16 overflow-hidden rounded-lg bg-gray-100 flex-shrink-0">
+                                <img
+                                  src={resolveImageUrl(p)}
+                                  alt={p.title}
+                                  className="h-16 w-16 object-cover"
+                                  onError={(e) => {
+                                    const placeholder = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=600';
+                                    const target = e.currentTarget as HTMLImageElement;
+                                    if (target.src !== placeholder) {
+                                      target.src = placeholder;
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm text-gray-900 mb-1 truncate">{p.title}</div>
+                                <div className="flex items-center text-sm text-gray-600 mb-1">
+                                  <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                                  <span className="truncate">{p.location || ''}{p.city ? `, ${p.city}` : ''}</span>
+                                </div>
+                                <div className="flex items-center text-sm font-medium text-dark-blue-500">
+                                  <DollarSign className="w-3 h-3 mr-1 flex-shrink-0" />
+                                  <span>Tsh {formatPrice(p.price)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 truncate">
+                              {(p?.agent && typeof p.agent === 'object' ? (p.agent.name || p.agent.full_name) : p?.agent) ||
+                               (p?.profiles?.full_name) || 
+                               (p.owner && typeof p.owner === 'object' ? (p.owner.name || p.owner.full_name) : p.owner) || 
+                               'N/A'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
                                 {badgeIcon}
                                 {badgeText}
                               </span>
-                            );
-                          })()}
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 hidden md:table-cell">{formatDate(p.created_at || p.createdAt || p.created)}</td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
+                          <td className="px-6 py-4 text-sm text-gray-600">{formatDate(p.created_at || p.createdAt || p.created)}</td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-2">
                             <button
                               onClick={() => window.open(`/properties/${p.id}`, '_blank')}
-                              className="p-1.5 sm:p-2 rounded-lg border border-light-blue-100 bg-light-blue-50 text-dark-blue-500 transition hover:border-blue-200 hover:bg-light-blue-100"
+                                className="p-2 rounded-lg border border-light-blue-100 bg-light-blue-50 text-dark-blue-500 transition hover:border-blue-200 hover:bg-light-blue-100"
                               title="Preview"
                             >
-                              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <Eye className="w-4 h-4" />
                             </button>
-                            {(() => {
-                              const isApproved = isPropertyApproved(p);
-                              return !isApproved ? (
+                              {!isApproved && (
                                 <>
                                   <button
                                     disabled={Boolean(actionLoading[`${p.id}-approve`])}
                                     onClick={() => setApproval(p.id, true)}
-                                    className="flex items-center justify-center rounded-lg bg-green-50 px-1.5 sm:px-2 py-1.5 sm:py-2 text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="flex items-center justify-center rounded-lg bg-green-50 px-2 py-2 text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-70"
                                     title="Approve"
                                   >
                                     {actionLoading[`${p.id}-approve`] ? (
-                                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                                      <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
-                                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                      <CheckCircle className="w-4 h-4" />
                                     )}
                                   </button>
                                   <button
                                     disabled={Boolean(actionLoading[`${p.id}-decline`])}
                                     onClick={() => setApproval(p.id, false)}
-                                    className="flex items-center justify-center rounded-lg bg-yellow-50 px-1.5 sm:px-2 py-1.5 sm:py-2 text-yellow-600 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="flex items-center justify-center rounded-lg bg-yellow-50 px-2 py-2 text-yellow-600 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-70"
                                     title="Decline"
                                   >
                                     {actionLoading[`${p.id}-decline`] ? (
-                                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                                      <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
-                                      <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                      <XCircle className="w-4 h-4" />
                                     )}
                                   </button>
                                 </>
-                              ) : null;
-                            })()}
+                              )}
                             <button
                               disabled={Boolean(actionLoading[`${p.id}-remove`])}
                               onClick={() => remove(p.id)}
-                              className="flex items-center justify-center rounded-lg bg-red-50 px-1.5 sm:px-2 py-1.5 sm:py-2 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+                                className="flex items-center justify-center rounded-lg bg-red-50 px-2 py-2 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
                               title="Delete"
                             >
                               {actionLoading[`${p.id}-remove`] ? (
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                                  <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  <Trash2 className="w-4 h-4" />
                               )}
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>

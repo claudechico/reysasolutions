@@ -9,10 +9,12 @@ export default function AdminModeration() {
   if (loading) {
     return (
       <AdminProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50 pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
-            <p className="text-gray-600">Loading moderation...</p>
+        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
+              <p className="text-gray-600">Loading moderation...</p>
+            </div>
           </div>
         </div>
       </AdminProtectedRoute>
@@ -23,7 +25,7 @@ export default function AdminModeration() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
+        <div className="flex-1 lg:ml-72">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Header Section */}
           <div className="mb-8">

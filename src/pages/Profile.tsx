@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi, bookingsApi, paymentsApi, propertiesApiExtended, favoritesApi } from '../lib/api';
-import { CheckCircle, XCircle, Clock, Mail, Phone, User, Shield, DollarSign, Calendar, Home, Heart, Edit, KeyRound, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Mail, Phone, User, Shield, DollarSign, Calendar, Home, Heart, Edit, KeyRound, AlertCircle, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatPrice } from '../lib/format';
 import { format } from 'date-fns';
@@ -25,6 +25,8 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
   
   // Statistics
   const [stats, setStats] = useState({
@@ -58,6 +60,19 @@ export default function Profile() {
       });
       setEmailVerified(!!me.isVerified || !!me.emailVerified);
       setPhoneVerified(!!me.phoneNumberVerified || !!me.phoneVerified || !!me.phone_verified);
+
+      // Check payment status
+      try {
+        setCheckingPayment(true);
+        const paymentRes = await paymentsApi.checkSubscription();
+        const paid = paymentRes?.isPaid || me.isPaidUser || false;
+        setIsPaid(paid);
+      } catch (err) {
+        // If check fails, use user's isPaidUser field as fallback
+        setIsPaid(me.isPaidUser || false);
+      } finally {
+        setCheckingPayment(false);
+      }
 
       // Load statistics
       const userRole = String((me.role || '').toLowerCase());
@@ -294,7 +309,39 @@ export default function Profile() {
                   <User className="w-4 h-4" />
                   <span className="capitalize">{profile?.role || t('profile.user')}</span>
                 </div>
+                {!checkingPayment && (
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="w-4 h-4" />
+                    <span className={isPaid ? 'text-green-600 font-semibold' : 'text-orange-600 font-semibold'}>
+                      {isPaid ? 'Paid' : 'Not Paid'}
+                    </span>
+                    {isPaid ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-orange-600" />
+                    )}
+                  </div>
+                )}
               </div>
+              {!checkingPayment && !isPaid && (
+                <div className="mt-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5 text-orange-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-orange-900">Payment Required</p>
+                        <p className="text-xs text-orange-800">You need to make a payment to access premium features.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate('/subscriptions')}
+                      className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md text-sm font-medium"
+                    >
+                      Subscribe Now
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { propertiesApi, propertiesApiExtended } from '../lib/api';
+import { propertiesApi, propertiesApiExtended, paymentsApi } from '../lib/api';
 import { categoriesApi } from '../lib/api';
-import { Save, ArrowLeft, X, Plus } from 'lucide-react';
+import { Save, ArrowLeft, X, Plus, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const AMENITIES_OPTIONS = [
@@ -19,6 +19,8 @@ export default function PropertyFormEnhanced() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(true);
   const [mediaFiles, setMediaFiles] = useState<{ type: string; url: string; alt?: string }[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -60,6 +62,27 @@ export default function PropertyFormEnhanced() {
       navigate('/dashboard');
       return;
     }
+
+    // Check payment status for agents/owners
+    (async () => {
+      try {
+        setCheckingPayment(true);
+        const res = await paymentsApi.checkSubscription();
+        const paid = res?.isPaid || (user as any).isPaidUser || false;
+        setIsPaid(paid);
+        if (!paid && id === 'new') {
+          setError('You need to make a payment before creating properties. Please subscribe to continue.');
+        }
+      } catch (err) {
+        // If check fails, use user's isPaidUser field as fallback
+        setIsPaid((user as any).isPaidUser || false);
+        if (!(user as any).isPaidUser && id === 'new') {
+          setError('You need to make a payment before creating properties. Please subscribe to continue.');
+        }
+      } finally {
+        setCheckingPayment(false);
+      }
+    })();
 
     if (id && id !== 'new') {
       loadProperty();
@@ -124,6 +147,20 @@ export default function PropertyFormEnhanced() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Check payment status before submitting
+    if (id === 'new') {
+      const userRole = String((user as any).role || '').toLowerCase();
+      if (userRole !== 'users') {
+        // For agents/owners, check payment
+        const paid = isPaid || (user as any).isPaidUser || false;
+        if (!paid) {
+          setError('You need to make a payment before creating properties. Please subscribe to continue.');
+          return;
+        }
+      }
+    }
+    
     setLoading(true);
 
     // Helper: map frontend fields to backend enum values to avoid "invalid input value for enum"
@@ -157,8 +194,8 @@ export default function PropertyFormEnhanced() {
       listing_type: formData.listing_type || undefined,
       price_per: formData.price_per || undefined,
       price: formData.price ? parseFloat(formData.price) : undefined,
-      bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : undefined,
-      bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : undefined,
+      bedrooms: formData.property_type === 'Plot' ? undefined : (formData.bedrooms ? parseInt(formData.bedrooms) : undefined),
+      bathrooms: formData.property_type === 'Plot' ? undefined : (formData.bathrooms ? parseInt(formData.bathrooms) : undefined),
       area: formData.area ? parseFloat(formData.area) : undefined,
       // backend uses `address` (we load into formData.address earlier)
       address: formData.address || undefined,
@@ -194,7 +231,7 @@ export default function PropertyFormEnhanced() {
       });
       
       if (id && id !== 'new') {
-        const updRes = await propertiesApiExtended.update(id, propertyData);
+        const updRes: any = await propertiesApiExtended.update(id, propertyData);
         console.log('[PropertyForm] PATCH /properties/:id response', updRes);
         console.log('[PropertyForm] Updated property status fields:', {
           status: updRes?.property?.status,
@@ -244,10 +281,22 @@ export default function PropertyFormEnhanced() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
+    // If property type is changed to Plot, clear bedrooms and bathrooms
+    if (name === 'property_type' && value === 'Plot') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        bedrooms: '',
+        bathrooms: '',
+        amenities: []
+      }));
+    } else {
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
+    }
   };
 
   const handleAmenityToggle = (amenity: string) => {
@@ -290,38 +339,68 @@ export default function PropertyFormEnhanced() {
 
   return (
   <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="mb-6">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition font-medium"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>{t('propertyForm.backToDashboard')}</span>
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8 sm:p-10 lg:p-12">
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
             {id && id !== 'new' ? 'Edit Property' : 'Add New Property'}
           </h1>
-          <p className="text-gray-600 mb-6">
+            <p className="text-base text-gray-600 leading-relaxed">
             Fill in the details below. Your listing will be reviewed before publishing.
           </p>
+          </div>
 
-          {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">{error}</p>
+          {checkingPayment ? (
+            <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
+              <p className="text-blue-800 text-sm font-medium">Checking payment status...</p>
             </div>
-          )}
+          ) : !isPaid && id === 'new' ? (
+            <div className="mb-6 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <CreditCard className="w-8 h-8 text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-orange-900 mb-2">Payment Required</h3>
+                  <p className="text-orange-800 text-sm mb-4">
+                    You need to make a payment before creating properties. Please subscribe to continue.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/subscriptions')}
+                    className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2.5 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md font-medium"
+                  >
+                    Go to Subscriptions
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 shadow-sm">
+              <p className="text-red-800 text-sm font-medium">{error}</p>
+            </div>
+          ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('propertyForm.basicInfo')}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.propertyTitle')}
+          <form onSubmit={handleSubmit} className="space-y-10" style={{ pointerEvents: !isPaid && id === 'new' ? 'none' : 'auto', opacity: !isPaid && id === 'new' ? 0.6 : 1 }}>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>
+                {t('propertyForm.basicInfo')}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+                <div className="md:col-span-2 lg:col-span-10">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.propertyTitle')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -329,36 +408,36 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderTitle')}
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.description')}
+                <div className="md:col-span-2 lg:col-span-10">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.description')} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="description"
                     required
-                    rows={4}
+                    rows={5}
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md resize-none"
                     placeholder={t('propertyForm.placeholderDescription')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.listingType')}
+                <div className="lg:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.listingType')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="listing_type"
                     required
                     value={formData.listing_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="buy">{t('propertyForm.forSale')}</option>
                     <option value="rent">{t('propertyForm.forRent')}</option>
@@ -366,34 +445,35 @@ export default function PropertyFormEnhanced() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.propertyType')}
+                <div className="lg:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.propertyType')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="property_type"
                     required
                     value={formData.property_type}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="House">{t('propertyForm.typeHouse')}</option>
                     <option value="Apartment">{t('propertyForm.typeApartment')}</option>
                     <option value="Villa">{t('propertyForm.typeVilla')}</option>
                     <option value="Townhouse">{t('propertyForm.typeTownhouse')}</option>
                     <option value="Condo">{t('propertyForm.typeCondo')}</option>
+                    <option value="Plot">Plot</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="lg:col-span-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('propertyForm.categoryOptional')}
                   </label>
                   <select
                     name="categoryId"
                     value={formData.categoryId || ''}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="">Select a category</option>
                     {categories.map(c => (
@@ -402,9 +482,9 @@ export default function PropertyFormEnhanced() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.price')}
+                <div className="lg:col-span-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.price')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -412,21 +492,21 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.price}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderPrice')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.pricePer')}
+                <div className="lg:col-span-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.pricePer')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="price_per"
                     required
                     value={formData.price_per}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="one_time">{t('propertyForm.oneTime')}</option>
                     <option value="month">{t('propertyForm.perMonth')}</option>
@@ -437,12 +517,15 @@ export default function PropertyFormEnhanced() {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('propertyForm.location')}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.fullAddress')}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>
+                {t('propertyForm.location')}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+                <div className="md:col-span-2 lg:col-span-10">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.fullAddress')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -450,14 +533,14 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderAddress')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.zipCode')}
+                <div className="lg:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.zipCode')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -465,14 +548,14 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.zipCode}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderZip')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.city')}
+                <div className="lg:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.city')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -480,14 +563,14 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.city}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderCity')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.state')}
+                <div className="lg:col-span-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.state')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -495,13 +578,13 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.state}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderState')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="lg:col-span-5">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('propertyForm.latitude')}
                   </label>
                   <input
@@ -510,13 +593,13 @@ export default function PropertyFormEnhanced() {
                     name="latitude"
                     value={formData.latitude}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderLatitude')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="lg:col-span-5">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t('propertyForm.longitude')}
                   </label>
                   <input
@@ -525,19 +608,24 @@ export default function PropertyFormEnhanced() {
                     name="longitude"
                     value={formData.longitude}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderLongitude')}
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('propertyForm.propertyDetails')}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.bedrooms')}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>
+                {t('propertyForm.propertyDetails')}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-10 gap-6">
+                {formData.property_type !== 'Plot' && (
+                  <>
+                    <div className="lg:col-span-3">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {t('propertyForm.bedrooms')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -545,14 +633,14 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.bedrooms}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderBedrooms')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.bathrooms')}
+                    <div className="lg:col-span-3">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {t('propertyForm.bathrooms')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -560,14 +648,16 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.bathrooms}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                        className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderBathrooms')}
                   />
                 </div>
+                  </>
+                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.area')}
+                <div className={formData.property_type === 'Plot' ? 'lg:col-span-5' : 'lg:col-span-4'}>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.area')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -575,21 +665,21 @@ export default function PropertyFormEnhanced() {
                     required
                     value={formData.area}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md"
                     placeholder={t('propertyForm.placeholderArea')}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.status')}
+                <div className="lg:col-span-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.status')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="status"
                     required
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="available">{t('propertyForm.statusAvailable')}</option>
                     <option value="pending">{t('propertyForm.statusPending')}</option>
@@ -597,16 +687,16 @@ export default function PropertyFormEnhanced() {
                   </select>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.availability')}
+                <div className="lg:col-span-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('propertyForm.availability')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="availability_status"
                     required
                     value={formData.availability_status}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none transition-all shadow-sm hover:shadow-md bg-white"
                   >
                     <option value="available">{t('propertyForm.availNow')}</option>
                     <option value="booked">{t('propertyForm.availBooked')}</option>
@@ -616,25 +706,33 @@ export default function PropertyFormEnhanced() {
               </div>
             </div>
 
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('propertyForm.amenities')}</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {formData.property_type !== 'Plot' && (
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>
+                  {t('propertyForm.amenities')}
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {AMENITIES_OPTIONS.map(amenity => (
-                  <label key={amenity} className="flex items-center space-x-2 cursor-pointer">
+                    <label key={amenity} className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg border-2 border-gray-200 bg-white hover:border-dark-blue-300 hover:bg-blue-50 transition-all shadow-sm">
                     <input
                       type="checkbox"
                       checked={formData.amenities.includes(amenity)}
                       onChange={() => handleAmenityToggle(amenity)}
-                      className="w-4 h-4 text-dark-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-light-blue-500"
+                        className="w-5 h-5 text-dark-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-dark-blue-500 focus:ring-offset-2"
                     />
-                    <span className="text-sm text-gray-700">{t(`amenities.${amenity}`)}</span>
+                      <span className="text-sm font-medium text-gray-700">{t(`amenities.${amenity}`)}</span>
                   </label>
                 ))}
               </div>
             </div>
+            )}
 
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Media</h2>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>
+                Media
+              </h2>
               <div className="space-y-6">
                 {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -651,25 +749,29 @@ export default function PropertyFormEnhanced() {
                 </div> */}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.uploadImages')}
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    {t('propertyForm.uploadImages')} (multiple)
                   </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 bg-white hover:border-dark-blue-400 hover:bg-blue-50/50 transition-all">
                   <input
                     type="file"
                     accept="image/*"
                     multiple
                     onChange={onSelectImages}
-                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-light-blue-50 file:text-dark-blue-600 hover:file:bg-light-blue-100"
+                      className="block w-full text-sm text-gray-700 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-dark-blue-500 file:to-indigo-600 file:text-white hover:file:from-dark-blue-600 hover:file:to-indigo-700 file:cursor-pointer file:shadow-lg"
                   />
+                  </div>
                   {imageFiles.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
                       {imageFiles.map((file, index) => (
                         <div key={index} className="relative group">
-                          <img src={URL.createObjectURL(file)} alt="" className="w-full h-32 object-cover rounded-lg" />
+                          <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group-hover:border-dark-blue-400 transition-all shadow-md">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                          </div>
                           <button
                             type="button"
                             onClick={() => removeSelectedImage(index)}
-                            className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                            className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-red-700 hover:scale-110"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -680,49 +782,53 @@ export default function PropertyFormEnhanced() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.uploadVideo')}
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    {t('propertyForm.uploadVideo')} (optional)
                   </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 bg-white hover:border-dark-blue-400 hover:bg-blue-50/50 transition-all">
                   <input
                     type="file"
                     accept="video/*"
                     onChange={onSelectVideo}
-                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-light-blue-50 file:text-dark-blue-600 hover:file:bg-light-blue-100"
+                      className="block w-full text-sm text-gray-700 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-gradient-to-r file:from-dark-blue-500 file:to-indigo-600 file:text-white hover:file:from-dark-blue-600 hover:file:to-indigo-700 file:cursor-pointer file:shadow-lg"
                   />
+                  </div>
                   {videoFile && (
-                    <div className="relative mt-3">
-                      <video src={URL.createObjectURL(videoFile)} className="w-full h-40 object-cover rounded-lg" controls />
-                      <button type="button" onClick={clearVideo} className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full">
-                        <X className="w-4 h-4" />
+                    <div className="relative mt-4 rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
+                      <video src={URL.createObjectURL(videoFile)} className="w-full h-48 object-cover" controls />
+                      <button type="button" onClick={clearVideo} className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow-lg hover:bg-red-700 transition-all">
+                        <X className="w-5 h-5" />
                       </button>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('propertyForm.legacyAddMedia')}
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    (Legacy) Add media by URL
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
                     {mediaFiles.map((file, index) => (
                       <div key={index} className="relative group">
+                        <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group-hover:border-dark-blue-400 transition-all shadow-md">
                         {file.type === 'video' ? (
-                          <video src={file.url} className="w-full h-32 object-cover rounded-lg" controls />
+                            <video src={file.url} className="w-full h-full object-cover" controls />
                         ) : (
-                          <img src={file.url} alt={file.alt || `media-${index}`} className="w-full h-32 object-cover rounded-lg" />
+                            <img src={file.url} alt={file.alt || `media-${index}`} className="w-full h-full object-cover" />
                         )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeMediaFile(index)}
-                          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                          className="absolute -top-2 -right-2 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-red-700 hover:scale-110"
                         >
                           <X className="w-4 h-4" />
                         </button>
-                        <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-lg font-medium">
                           {file.type}
                         </div>
                         <div className="mt-2">
-                          <label className="block text-xs text-gray-200">Alt text</label>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Alt text</label>
                           <input
                             type="text"
                             value={file.alt || ''}
@@ -730,8 +836,8 @@ export default function PropertyFormEnhanced() {
                               const newAlt = e.target.value;
                               setMediaFiles(prev => prev.map((m, i) => i === index ? { ...m, alt: newAlt } : m));
                             }}
-                            className="w-full mt-1 text-xs px-2 py-1 rounded bg-white/90"
-                            placeholder="Short description for accessibility"
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none"
+                            placeholder="Short description"
                           />
                         </div>
                       </div>
@@ -740,43 +846,43 @@ export default function PropertyFormEnhanced() {
                   <button
                     type="button"
                     onClick={addMediaFile}
-                    className="flex items-center space-x-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-light-blue-500 hover:text-dark-blue-500 transition"
+                    className="flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-gray-400 rounded-xl hover:border-dark-blue-500 hover:bg-blue-50 hover:text-dark-blue-600 transition-all font-semibold"
                   >
                     <Plus className="w-5 h-5" />
-                    <span>{t('propertyForm.addMediaUrl')}</span>
+                    <span>Add Image or Video URL</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-6">
-              <label className="flex items-center space-x-3 cursor-pointer">
+            <div className="border-t-2 border-gray-200 pt-8">
+              <label className="flex items-center space-x-4 cursor-pointer p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-dark-blue-300 hover:bg-blue-50 transition-all">
                 <input
                   type="checkbox"
                   name="featured"
                   checked={formData.featured}
                   onChange={handleChange}
-                  className="w-5 h-5 text-dark-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-light-blue-500"
+                  className="w-6 h-6 text-dark-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-dark-blue-500 focus:ring-offset-2"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-base font-semibold text-gray-700">
                   {t('propertyForm.markFeatured')}
                 </span>
               </label>
             </div>
 
-            <div className="flex space-x-4 pt-6">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-8 border-t-2 border-gray-200">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-8 py-3.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 bg-gradient-to-r from-dark-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-dark-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all shadow-xl shadow-dark-blue-500/30 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
               >
-                <Save className="w-5 h-5" />
+                <Save className="w-6 h-6" />
                 <span>{loading ? t('propertyForm.saving') : t('propertyForm.savePending')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="px-8 py-3.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+                className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all font-semibold text-lg"
               >
                 {t('propertyForm.cancel')}
               </button>

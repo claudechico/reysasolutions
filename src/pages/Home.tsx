@@ -1,5 +1,5 @@
-import { Search, MapPin, BedDouble, Bath, Square, TrendingUp, Shield, Award, Users, Eye, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, BedDouble, Bath, Square, TrendingUp, Shield, Award, Users, Eye, ChevronLeft, ChevronRight, Phone, Home as HomeIcon, Building2, Hotel, LandPlot, Building, Store, Briefcase, Factory, Warehouse } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { propertiesApi, PropertyDto, categoriesApi, CategoryDto, usersApi, advertisementsApi, AdvertisementDto } from '../lib/api';
@@ -80,6 +80,34 @@ function resolvePropertyImage(property: PropertyDto) {
   return null;
 }
 
+// Function to get category-specific icon
+function getCategoryIcon(categoryName: string) {
+  const name = categoryName.toLowerCase().trim();
+  
+  if (name.includes('house') || name.includes('home') || name.includes('villa')) {
+    return HomeIcon;
+  } else if (name.includes('apartment') || name.includes('flat') || name.includes('condo')) {
+    return Building2;
+  } else if (name.includes('hotel') || name.includes('resort')) {
+    return Hotel;
+  } else if (name.includes('plot') || name.includes('land') || name.includes('viwanja')) {
+    return LandPlot;
+  } else if (name.includes('commercial') || name.includes('shop') || name.includes('store')) {
+    return Store;
+  } else if (name.includes('office')) {
+    return Briefcase;
+  } else if (name.includes('factory') || name.includes('industrial')) {
+    return Factory;
+  } else if (name.includes('warehouse') || name.includes('storage')) {
+    return Warehouse;
+  } else if (name.includes('building')) {
+    return Building;
+  }
+  
+  // Default icon
+  return MapPin;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -96,12 +124,17 @@ export default function Home() {
     yearsExperience: '15+'
   });
   const { t } = useTranslation();
+  const location = useLocation();
+
   useEffect(() => {
     // if the signed-in user is an admin, send them to the admin dashboard
+    // unless the URL explicitly includes `skipAdminRedirect=1` (used when admin clicks Home)
+    const params = new URLSearchParams(location.search || '');
+    const skip = params.get('skipAdminRedirect') === '1' || params.get('view') === 'public';
     if (user) {
       const userRole = user as { role?: string };
       const role = String(userRole?.role || '').toLowerCase();
-      if (role === 'admin') {
+      if (role === 'admin' && !skip) {
         navigate('/admin');
         return;
       }
@@ -307,14 +340,14 @@ export default function Home() {
 
   return (
     <div>
-  <section id="home" className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-dark-blue-700 via-dark-blue-500 to-light-blue-300">
-        <div className="max-w-7xl mx-auto">
+  <section id="home" className="pt-32 sm:pt-40 md:pt-48 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-dark-blue-700 via-dark-blue-500 to-light-blue-300">
+        <div className="max-w-[90rem] mx-auto">
           <div className="text-center mb-12">
             <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 sm:mb-4 md:mb-6 leading-tight px-2 text-balance">
               {t('nav.dream')}
             </h3>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-light-blue-100 max-w-2xl mx-auto mb-4 sm:mb-6 md:mb-8 px-2 leading-relaxed text-pretty">
-              {t('nav.dream2')}
+           {t('nav.dream2')}
             </p>
 
             <div className="max-w-4xl mx-auto bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl shadow-light-blue-500/20 p-4 sm:p-6 md:p-8 border border-white/20 animate-fade-in">
@@ -383,10 +416,10 @@ export default function Home() {
 
       {/* Advertisements Slideshow Banner */}
       {advertisements.length > 0 && (
-        <section className="py-6 sm:py-8 px-3 sm:px-4 md:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
-          <div className="max-w-7xl mx-auto">
+        <section className="py-8 sm:py-12 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
+          <div className="max-w-[90rem] mx-auto">
             <div className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div className="relative h-56 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] overflow-hidden">
+              <div className="relative h-56 sm:h-64 md:h-80 lg:h-96 xl:h-[450px] overflow-hidden">
                 {advertisements.map((ad, index) => {
                   const imageUrl = resolveAdvertisementImage(ad);
                   const isActive = index === currentAdIndex;
@@ -417,13 +450,13 @@ export default function Home() {
                         
                         {/* Content */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-center text-white px-4 sm:px-6 max-w-4xl w-full font-sans">
+                          <div className="text-center text-white px-4 sm:px-6 md:px-8 lg:px-12 max-w-5xl w-full font-sans">
                             <div className="mb-4 sm:mb-6">
-                              <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-2 sm:mb-4 drop-shadow-2xl leading-tight text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-4 drop-shadow-2xl leading-tight text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                 {ad.title}
                               </h2>
                               {ad.description && (
-                                <p className="text-sm sm:text-lg md:text-xl lg:text-2xl mb-4 sm:mb-6 line-clamp-2 drop-shadow-lg max-w-3xl mx-auto text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 line-clamp-2 drop-shadow-lg max-w-3xl mx-auto text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                   {ad.description}
                                 </p>
                               )}
@@ -431,7 +464,7 @@ export default function Home() {
                             
                             {ad.price && (
                               <div className="mb-4 sm:mb-6">
-                                <p className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                <p className="text-lg sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-bold drop-shadow-lg text-white font-sans" style={{ fontFamily: "'Poppins', sans-serif" }}>
                                   Tsh {formatPrice(ad.price)}
                                 </p>
                               </div>
@@ -508,28 +541,31 @@ export default function Home() {
         </section>
       )}
 
-      <section id="categories" className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-6 sm:mb-8">
+      <section id="categories" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-[90rem] mx-auto">
+          <div className="text-center mb-8 sm:mb-10 md:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{t('nav.browse')}</h2>
             <p className="text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl mx-auto px-4">{t('nav.browse2')}</p>
           </div>
 
                 {categories.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-              {categories.map((c) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6 lg:gap-8">
+              {categories.map((c) => {
+                const IconComponent = getCategoryIcon(c.name);
+                return (
                 <div
                   key={c.id}
                   onClick={() => navigate(`/properties?category=${encodeURIComponent(String(c.name))}&categoryId=${encodeURIComponent(String(c.id))}`)}
-                  className="card-elevated p-4 sm:p-5 md:p-6 cursor-pointer hover-lift group"
+                    className="card-elevated p-5 sm:p-6 md:p-7 lg:p-8 cursor-pointer hover-lift group min-w-0 flex flex-col items-center text-center"
                 >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform shadow-lg flex-shrink-0 mx-auto">
+                      <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
+                    </div>
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gradient mb-2 sm:mb-3 leading-tight break-words w-full">{c.name}</h3>
+                    {c.description && <p className="text-sm sm:text-base text-gray-600 leading-relaxed line-clamp-2 break-words w-full">{c.description}</p>}
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-gradient mb-1 sm:mb-2 leading-tight">{c.name}</h3>
-                  {c.description && <p className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">{c.description}</p>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -539,14 +575,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="properties" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
+      <section id="properties" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[90rem] mx-auto">
+          <div className="text-center mb-10 sm:mb-12 md:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
               {t('nav.featured')}
             </h2>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 leading-relaxed">
-              {t('nav.mot')}
+                {t('nav.mot')}
             </p>
           </div>
 

@@ -114,29 +114,29 @@ export default function About() {
       description: 'We leverage the latest technology and market insights to give you a competitive advantage.'
     }
   ];
-
-  const team = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO & Founder',
-      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Head of Sales',
-      image: 'https://images.pexels.com/photos/697509/pexels-photo-697509.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'Lead Agent',
-      image: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=400'
-    },
-    {
-      name: 'David Thompson',
-      role: 'Property Manager',
-      image: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400'
-    }
-  ];
+// 
+  // const team = [
+  //   {
+  //     name: 'Sarah Johnson',
+  //     role: 'CEO & Founder',
+  //     image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
+  //   },
+  //   {
+  //     name: 'Michael Chen',
+  //     role: 'Head of Sales',
+  //     image: 'https://images.pexels.com/photos/697509/pexels-photo-697509.jpeg?auto=compress&cs=tinysrgb&w=400'
+  //   },
+  //   {
+  //     name: 'Emily Rodriguez',
+  //     role: 'Lead Agent',
+  //     image: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=400'
+  //   },
+  //   {
+  //     name: 'David Thompson',
+  //     role: 'Property Manager',
+  //     image: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400'
+  //   }
+  // ];
 
   return (
   <div className="min-h-screen pt-24 bg-white">
@@ -147,7 +147,7 @@ export default function About() {
               About <span className="bg-gradient-to-r from-light-blue-500 to-dark-blue-700 bg-clip-text text-transparent">Reysasolutions</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-              We are a leading real estate company dedicated to helping you find your dream home. With over 15 years of experience, we've helped thousands of families discover their perfect property.
+              We are a leading real estate company dedicated to helping you find your dream home. Founded in 2023, we've rapidly grown into a trusted name known for professionalism, integrity, and results.
             </p>
           </div>
 
@@ -170,13 +170,13 @@ export default function About() {
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Our Story</h2>
               <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-                Founded in 2008, Reysasolutions began with a simple mission: to revolutionize the real estate industry by putting clients first. What started as a small local agency has grown into one of the most trusted names in real estate.
+                Founded in 2023, Reysasolutions was established with a clear mission: to redefine the real estate industry by putting clients first. What began as a focused local initiative has rapidly grown into a trusted name, known for professionalism, integrity, and results.
               </p>
               <p className="text-sm sm:text-base text-gray-600 mb-4 leading-relaxed">
-                Our team of experienced professionals brings together decades of combined expertise in residential and commercial real estate. We understand that buying or selling a property is one of life's most significant decisions, and we're here to guide you every step of the way.
+                Our team is made up of dedicated and skilled professionals who bring strong expertise in both residential and commercial real estate. We understand that buying or selling property is one of life's most important decisions, and we are committed to providing reliable guidance, transparency, and support at every stage of the process.
               </p>
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                Today, we're proud to serve clients across the nation, offering a comprehensive range of services from property search and valuation to negotiation and closing. Our commitment to excellence and client satisfaction has earned us numerous industry awards and, more importantly, the trust of thousands of happy homeowners.
+                Today, we proudly serve clients with a comprehensive range of real estate services, including property search, valuation, negotiation, and closing. Our commitment to excellence and client satisfaction continues to build lasting relationships and earn the trust of our valued clients.
               </p>
             </div>
             <div className="relative">
@@ -209,32 +209,6 @@ export default function About() {
             </div>
           </div>
 
-          <div>
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Meet Our Team</h2>
-              <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-2">
-                Dedicated professionals committed to your success
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {team.map((member, index) => (
-                <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-all group">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-6 text-center">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                    <p className="text-dark-blue-500 font-medium">{member.role}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
 

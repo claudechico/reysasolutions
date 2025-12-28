@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp public/.htaccess dist/.htaccess && if [ -f dist/.htaccess ]; then echo '.htaccess copied to dist ✅'; else echo '.htaccess not found in dist ❌ (upload may have skipped dotfiles)'; exit 1; fi",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"

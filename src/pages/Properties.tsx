@@ -118,11 +118,12 @@ export default function Properties() {
       if (v === null || v === undefined) return;
       const s = String(v).trim();
       if (s === '') return;
-      // allow numeric categoryId to be passed as number
-      if (k === 'categoryId') {
-        // if it's numeric string, pass as number
+      // Convert numeric fields to numbers
+      if (k === 'categoryId' || k === 'bedrooms' || k === 'bathrooms' || k === 'minPrice' || k === 'maxPrice') {
         const n = Number(s);
-        q[k] = Number.isNaN(n) ? s : n;
+        if (!Number.isNaN(n)) {
+          q[k] = n;
+        }
       } else {
         q[k] = s;
       }
@@ -135,7 +136,28 @@ export default function Properties() {
     console.log('[Properties] Status filter value:', filters.status);
     setLoading(true);
     try {
-      const params = buildQueryParams(p);
+      // Check if we need client-side filtering (bedrooms, bathrooms, price)
+      // Location can be sent to API, but we'll also do client-side filtering for city matching
+      const needsClientFiltering = !!(filters.bedrooms?.trim() || filters.bathrooms?.trim() || filters.minPrice?.trim() || filters.maxPrice?.trim());
+      
+      let params: Record<string, any>;
+      if (needsClientFiltering || filters.location?.trim()) {
+        // Fetch a larger set for client-side filtering (especially for location/city search)
+        params = { page: 1, limit: 1000 };
+        if (filters.categoryId) {
+          params.categoryId = filters.categoryId;
+        }
+        if (filters.status) {
+          params.status = filters.status;
+        }
+        // Also send location to API if backend supports it
+        if (filters.location?.trim()) {
+          params.location = filters.location.trim();
+        }
+      } else {
+        params = buildQueryParams(p);
+      }
+      
       console.log('[Properties] built query params ->', params);
       console.log('[Properties] Status in query params:', params.status);
       let res: any;
@@ -186,8 +208,89 @@ export default function Properties() {
         });
       }
       
-      console.log('[Properties] Approved properties after filtering:', approvedProperties.length);
-      setProperties(approvedProperties);
+      // Client-side filtering by location (searches in location, city, address, state)
+      if (filters.location && filters.location.trim() !== '') {
+        const locationFilter = filters.location.trim().toLowerCase();
+        approvedProperties = approvedProperties.filter((property: any) => {
+          // Search in multiple fields: location, city, address, state
+          const searchableText = [
+            property?.location,
+            property?.city,
+            property?.address,
+            property?.state,
+            property?.city + ' ' + property?.state, // Combined city and state
+            property?.location + ' ' + property?.city // Combined location and city
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return searchableText.includes(locationFilter);
+        });
+        console.log('[Properties] After location/city filtering:', {
+          locationFilter,
+          remainingCount: approvedProperties.length
+        });
+      }
+      
+      // Client-side filtering by bedrooms
+      if (filters.bedrooms && filters.bedrooms.trim() !== '') {
+        const bedroomsFilter = Number(filters.bedrooms);
+        if (!Number.isNaN(bedroomsFilter)) {
+          approvedProperties = approvedProperties.filter((property: any) => {
+            const propertyBedrooms = Number(property?.bedrooms || 0);
+            return propertyBedrooms >= bedroomsFilter;
+          });
+          console.log('[Properties] After bedrooms filtering:', {
+            bedroomsFilter,
+            remainingCount: approvedProperties.length
+          });
+        }
+      }
+      
+      // Client-side filtering by bathrooms
+      if (filters.bathrooms && filters.bathrooms.trim() !== '') {
+        const bathroomsFilter = Number(filters.bathrooms);
+        if (!Number.isNaN(bathroomsFilter)) {
+          approvedProperties = approvedProperties.filter((property: any) => {
+            const propertyBathrooms = Number(property?.bathrooms || 0);
+            return propertyBathrooms >= bathroomsFilter;
+          });
+          console.log('[Properties] After bathrooms filtering:', {
+            bathroomsFilter,
+            remainingCount: approvedProperties.length
+          });
+        }
+      }
+      
+      // Client-side filtering by price range
+      if (filters.minPrice && filters.minPrice.trim() !== '') {
+        const minPriceFilter = Number(filters.minPrice);
+        if (!Number.isNaN(minPriceFilter)) {
+          approvedProperties = approvedProperties.filter((property: any) => {
+            const propertyPrice = Number(property?.price || 0);
+            return propertyPrice >= minPriceFilter;
+          });
+        }
+      }
+      
+      if (filters.maxPrice && filters.maxPrice.trim() !== '') {
+        const maxPriceFilter = Number(filters.maxPrice);
+        if (!Number.isNaN(maxPriceFilter)) {
+          approvedProperties = approvedProperties.filter((property: any) => {
+            const propertyPrice = Number(property?.price || 0);
+            return propertyPrice <= maxPriceFilter;
+          });
+        }
+      }
+      
+      console.log('[Properties] Approved properties after all filtering:', approvedProperties.length);
+      
+      // Apply pagination after filtering
+      const start = (p - 1) * limit;
+      const end = start + limit;
+      const paginatedProperties = approvedProperties.slice(start, end);
+      
+      setProperties(paginatedProperties);
       setTotal(approvedProperties.length);
       setPage(p);
     } catch (e: any) {
@@ -273,7 +376,7 @@ export default function Properties() {
 
   return (
   <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             {t('nav.browse3')}
@@ -283,7 +386,7 @@ export default function Properties() {
           </p>
         </div>
 
-        <div className="card-elevated p-6 sm:p-8 mb-8 animate-fade-in">
+        <div className="card-elevated p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 animate-fade-in">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gradient">{t('property.searchFilter')}</h3>
             <button
@@ -370,17 +473,17 @@ export default function Properties() {
             </div>
           )}
 
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:space-x-4">
             <button
               onClick={handleSearch}
-              className="btn-primary flex-1 flex items-center justify-center space-x-2"
+              className="btn-primary flex-1 flex items-center justify-center space-x-1.5 sm:space-x-2 py-2 sm:py-3 text-sm sm:text-base"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{t('property.search')}</span>
             </button>
             <button
               onClick={clearFilters}
-              className="btn-secondary px-8"
+              className="btn-secondary px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
             >
               {t('property.clearAll')}
             </button>
@@ -394,10 +497,7 @@ export default function Properties() {
           </div>
         ) : properties.length > 0 ? (
           <>
-            <div className="mb-6 text-gray-600">
-              {t('property.found', { count: properties.length, property: properties.length === 1 ? t('property.property') : t('property.properties') })}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {properties.map((property) => (
                 <div
                   key={property.id}

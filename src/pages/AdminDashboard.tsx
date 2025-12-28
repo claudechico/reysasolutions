@@ -675,10 +675,12 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 flex items-center justify-center bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -694,8 +696,8 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <AdminSidebar />
-      <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+      <div className="flex-1 lg:ml-72">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-dark-blue-500 via-dark-blue-600 to-violet-600 p-4 sm:p-6 lg:p-8 text-white shadow-2xl">
           <div className="absolute -top-24 right-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 right-0 hidden h-40 w-40 rounded-full bg-white/10 blur-2xl lg:block" />

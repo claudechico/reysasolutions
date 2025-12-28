@@ -305,7 +305,12 @@ export default function Contact() {
                   </li>
                 </ul>
                 <button
-                  onClick={() => window.open('YOUR_CHAT_URL', '_blank')}
+                  onClick={() => {
+                    // Dispatch custom event to open live chat
+                    window.dispatchEvent(new CustomEvent('openLiveChat'));
+                    // Scroll to top to see the chat button/window
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className="w-full bg-white text-dark-blue-500 px-6 py-4 rounded-xl hover:bg-light-blue-50 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {t('contact.startChatNow')}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Not Found</title>
+    <meta name="robots" content="noindex">
+    <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;padding:2rem;color:#111}</style>
+  </head>
+  <body>
+    <h1>Not Found</h1>
+    <p>The page you requested was not found on the server — loading the app so the client router can handle this route.</p>
+
+    <script>
+      // SPA fallback: fetch the real index.html and render it so client-side routing can take over.
+      (function(){
+        function fallback(){
+          try{ window.location.replace('/'); }catch(e){ /* ignore */ }
+        }
+
+        fetch('/index.html', {cache: 'no-store'})
+          .then(function(res){ if(!res.ok) throw new Error('index.html fetch failed'); return res.text(); })
+          .then(function(html){
+            // Replace current document with index.html content so SPA JS runs and can handle current path
+            document.open();
+            document.write(html);
+            document.close();
+          })
+          .catch(function(){
+            // If fetch fails, fallback to site root
+            setTimeout(fallback, 500);
+          });
+      })();
+    </script>
+  </body>
+</html>

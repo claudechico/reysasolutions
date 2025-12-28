@@ -92,7 +92,7 @@ async function publicRequest<T>(path: string, options: RequestInit = {}): Promis
 	// Explicitly ensure Authorization is NOT in headers (check both cases)
 	delete headers.Authorization;
 	delete headers.authorization;
-
+	
 	// Create clean options without any auth-related headers
 	const cleanOptions: RequestInit = {
 		method: options.method,
@@ -128,6 +128,7 @@ export interface BackendUser {
 	phoneNumber?: string;
 	role?: string;
 	isVerified?: boolean;
+	isPaidUser?: boolean;
 }
 
 export interface AuthResponse {
@@ -402,9 +403,19 @@ export const propertiesApiExtended = {
 };
 
 export const paymentsApi: any = {
-	initiate: (payload: { provider: string; amount: number; phone?: string }) =>
-		request(`/payments/initiate`, { method: 'POST', body: JSON.stringify(payload) }),
+	createOrder: (payload: { amount: number; buyer_phone?: string; msisdn?: string; buyer_remarks?: string; merchant_remarks?: string; no_of_items?: number }) =>
+		request(`/payments/create-order`, { method: 'POST', body: JSON.stringify(payload) }),
+	walletPullPayment: (payload: { msisdn: string; order_id: string }) =>
+		request(`/payments/wallet-pull-payment`, { method: 'POST', body: JSON.stringify(payload) }),
+	checkOrderStatus: (order_id: string) =>
+		request(`/payments/check-order-status`, { method: 'POST', body: JSON.stringify({ order_id }) }),
+	cancelOrder: (order_id: string) =>
+		request(`/payments/cancel-order`, { method: 'POST', body: JSON.stringify({ order_id }) }),
 	status: (paymentId: string | number) => request(`/payments/${paymentId}/status`),
+	checkSubscription: () => request<{ success: boolean; isPaid: boolean; message?: string }>(`/payments/check-subscription`),
+	// Legacy method for backward compatibility
+	initiate: (payload: { provider: string; amount: number; phone?: string }) =>
+		paymentsApi.createOrder({ amount: payload.amount, buyer_phone: payload.phone, msisdn: payload.phone }),
 };
 
 // Optional: list past payments for the current user

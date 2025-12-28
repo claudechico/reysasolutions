@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -37,14 +37,27 @@ import AdvertisementForm from './pages/AdvertisementForm';
 import Auctions from './pages/Auctions';
 import AuctionForm from './pages/AuctionForm';
 import AuctionDetail from './pages/AuctionDetail';
+import LiveChat from './components/LiveChat';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="min-h-screen bg-white flex flex-col">
-          <Navbar />
-          <main className="flex-grow flex flex-col">
+        <InnerApp />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+function InnerApp() {
+  const location = useLocation();
+  const hideFooter = location.pathname.startsWith('/admin');
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col">
+      <Navbar />
+      <main className={`flex-grow flex flex-col pt-[var(--app-nav-height)] ${isAdmin ? 'md:pt-[calc(var(--app-nav-height)+0.5rem)]' : ''}`}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/properties" element={<Properties />} />
@@ -225,13 +238,14 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp" element={<VerifyOTP />} />
               <Route path="/verify-otp/:token" element={<VerifyOTP />} />
+              {/* Catch-all route - only redirects if route truly doesn't exist */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
-          <Footer />
+          {!hideFooter && <Footer />}
+          <LiveChat />
         </div>
-      </AuthProvider>
-    </BrowserRouter>
-  );
+      );
 }
 
 export default App;

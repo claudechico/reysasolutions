@@ -3,10 +3,12 @@ import { MapPin, Menu, X, LogOut, LayoutDashboard, Heart, Calendar, Phone, Globe
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import type { BackendUser } from '../lib/api';
 
 export default function Navbar() {
   // Guard against missing AuthProvider to avoid runtime crash during partial renders/tests.
-  let user: unknown = null;
+  // Use the BackendUser type so property access like `user?.role` is type-safe.
+  let user: BackendUser | null = null;
   let signOut: (() => Promise<void>) | undefined = undefined;
   try {
     const auth = useAuth();
@@ -23,6 +25,7 @@ export default function Navbar() {
   }
   const navigate = useNavigate();
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -43,7 +46,7 @@ export default function Navbar() {
     setVar();
     window.addEventListener('resize', setVar);
     return () => window.removeEventListener('resize', setVar);
-  }, []);
+  }, [location.pathname]);
 
   const { t, i18n } = useTranslation();
   const [lang, setLang] = useState<string>(i18n.language || 'en');
@@ -81,9 +84,13 @@ export default function Navbar() {
             </div>
             <div className="flex items-center space-x-2">
               <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
-              <select value={lang} onChange={(e) => switchLang(e.target.value)} className="bg-transparent text-white text-xs sm:text-sm border-none outline-none cursor-pointer">
-                <option style={{color:'black'}} value="en">EN</option>
-                <option  style={{color:'black'}}  value="sw">SW</option>
+              <select 
+                value={lang} 
+                onChange={(e) => switchLang(e.target.value)} 
+                className="bg-white/20 hover:bg-white/30 text-white text-xs sm:text-sm border border-white/30 rounded px-2 py-1 outline-none cursor-pointer transition-colors font-semibold"
+              >
+                <option value="en" className="text-gray-900 bg-white">EN</option>
+                <option value="sw" className="text-gray-900 bg-white">SW</option>
               </select>
             </div>
           </div>
@@ -91,23 +98,24 @@ export default function Navbar() {
       </div>
 
       {/* Main navigation */}
-      <nav className="w-full bg-gradient-to-r from-dark-blue-50 via-light-blue-50 to-white shadow-sm">
+      <nav className={`w-full bg-white border-b border-gray-200 shadow-sm ${isAdmin ? 'mt-4 md:mt-6' : ''}`}>
         <div className="w-full">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity flex-shrink-0 pl-2 sm:pl-4 lg:pl-6">
+          <div className="flex justify-between items-center h-20 sm:h-20 md:h-24 pl-2 pr-2 sm:pl-3 sm:pr-4 lg:pl-4 lg:pr-6">
+            <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity flex-shrink-0 px-3 py-1 bg-white">
               <div className="relative">
-                <img 
-                  src="/images/logo.jpg" 
-                  alt="ReysaSolution Logo" 
-                  className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 object-contain rounded-xl shadow-md border-2 border-white/20"
-                />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-light-blue-500/10 to-dark-blue-500/10 pointer-events-none"></div>
+                <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 overflow-hidden bg-white flex items-center justify-center p-0">
+                  <img
+                    src="/images/logo.jpg"
+                    alt="ReysaSolution Logo"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-dark-blue-600 to-dark-blue-800 bg-clip-text text-transparent leading-tight">
+                <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-dark-blue-600 to-dark-blue-800 bg-clip-text text-transparent leading-tight">
                   ReysaSolution
                 </span>
-                <span className="text-[10px] sm:text-xs md:text-sm text-dark-blue-500 font-medium -mt-1 hidden sm:block">
+                <span className="text-[9px] sm:text-[10px] md:text-xs text-dark-blue-500 font-medium -mt-0.5 hidden sm:block">
                   REAL ESTATE
                 </span>
               </div>
@@ -115,7 +123,7 @@ export default function Navbar() {
 
             <div className="hidden md:flex items-center space-x-1 pr-4 sm:pr-6 lg:pr-8">
               <Link 
-                to="/" 
+                to={role === 'admin' ? '/?skipAdminRedirect=1' : '/'} 
                 className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
                   isActive('/') 
                     ? 'text-dark-blue-600 bg-light-blue-50' 
@@ -257,7 +265,7 @@ export default function Navbar() {
           <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
             <div className="px-4 py-4 space-y-1">
               <Link 
-                to="/" 
+                to={role === 'admin' ? '/?skipAdminRedirect=1' : '/'} 
                 onClick={() => setMobileMenuOpen(false)} 
                 className={`block px-4 py-2.5 rounded-lg transition font-medium ${
                   isActive('/') 

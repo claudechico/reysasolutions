@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { paymentsApi, bookingsApi } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { CreditCard, Smartphone, DollarSign, CheckCircle, Clock, XCircle, Wallet, History, AlertCircle } from 'lucide-react';
 import { formatPrice } from '../lib/format';
 import { format } from 'date-fns';
 
 export default function Payment() {
+  const { user } = useAuth();
   const [provider, setProvider] = useState('mpesa');
   const [amount, setAmount] = useState('1000');
   const [phone, setPhone] = useState('');
@@ -15,6 +17,13 @@ export default function Payment() {
   const pollingRef = useRef<Record<string, number>>({});
   const pendingBookingsRef = useRef<Record<string, any>>({});
   const navigate = useNavigate();
+  
+  // Initialize phone from user profile if available
+  useEffect(() => {
+    if (user && (user as any).phoneNumber && !phone) {
+      setPhone((user as any).phoneNumber);
+    }
+  }, [user, phone]);
 
   const providers = [
     { id: 'mpesa', label: 'M-Pesa' },
@@ -28,16 +37,49 @@ export default function Payment() {
     setMessage(null);
     setLoading(true);
     try {
-      const res: any = await paymentsApi.initiate({ provider, amount: Number(amount), phone });
-      setMessage(res?.message || 'Payment initiated. Follow instructions on your phone.');
-      // Add to history if backend returns a payment id/object
-      const payment = res?.payment || (res?.id ? { id: res.id, provider, amount: Number(amount), phone, status: res?.status || 'pending' } : null);
-      if (payment) {
-        setHistory(h => [payment, ...h]);
-        // start polling status for this payment id
-        // If a booking was passed via query, attach it to this payment id so we can create booking after success
+      // Format phone number to include country code if needed (Tanzania: 255)
+      // Use phone from input or fallback to user's phoneNumber
+      const phoneToUse = phone.trim() || (user as any)?.phoneNumber || '';
+      if (!phoneToUse) {
+        setMessage('Phone number is required. Please enter your mobile money registered phone number.');
+        setLoading(false);
+        return;
+      }
+      
+      let formattedPhone = phoneToUse.trim();
+      if (formattedPhone && !formattedPhone.startsWith('255')) {
+        // Remove leading 0 and add 255
+        formattedPhone = formattedPhone.startsWith('0') ? `255${formattedPhone.substring(1)}` : `255${formattedPhone}`;
+      }
+      
+      const res: any = await paymentsApi.createOrder({ 
+        amount: Number(amount), 
+        buyer_phone: phoneToUse,
+        msisdn: formattedPhone || undefined,
+      });
+      
+      const orderData = res?.data?.order || res?.order || {};
+      const paymentData = res?.data?.payment || res?.payment || {};
+      const orderId = orderData?.order_id || orderData?.orderId || res?.order_id;
+      
+      if (orderId) {
+        setMessage(res?.message || 'Order created successfully. Payment initiated. Follow instructions on your phone.');
+        
+        // Create payment history entry
+        const paymentEntry = {
+          id: orderId,
+          orderId: orderId,
+          amount: Number(amount),
+          phone: phone,
+          provider: provider,
+          status: paymentData?.status || orderData?.status || 'PENDING',
+          createdAt: new Date().toISOString(),
+        };
+        
+        setHistory(h => [paymentEntry, ...h]);
+        
+        // If a booking was passed via query, attach it to this order id so we can create booking after success
         const params = new URLSearchParams(window.location.search);
-        // collect booking params if present
         const bookingPropId = params.get('propertyId');
         const bookingStart = params.get('startDate');
         const bookingEnd = params.get('endDate');
@@ -51,13 +93,18 @@ export default function Payment() {
             durationType: (bookingDurationType as any) || 'days',
           };
           if (total) toCreate.totalAmount = Number(total);
-          pendingBookingsRef.current[String(payment.id)] = toCreate;
+          pendingBookingsRef.current[String(orderId)] = toCreate;
         }
 
-        startPolling(String(payment.id));
+        // Start polling order status
+        startPollingOrder(String(orderId));
+      } else {
+        setMessage(res?.message || 'Order created but could not track payment status.');
       }
     } catch (e: any) {
-      setMessage(e?.message || 'Payment failed to start');
+      const errorMsg = e?.message || e?.error || 'Payment failed to start';
+      setMessage(errorMsg);
+      console.error('Payment error:', e);
     } finally {
       setLoading(false);
     }
@@ -82,23 +129,32 @@ export default function Payment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startPolling = (paymentId: string) => {
-    if (!paymentId) return;
-    if (pollingRef.current[paymentId]) return; // already polling
+  const startPollingOrder = (orderId: string) => {
+    if (!orderId) return;
+    if (pollingRef.current[orderId]) return; // already polling
     const iv = window.setInterval(async () => {
       try {
-        const res: any = await paymentsApi.status(paymentId);
+        const res: any = await paymentsApi.checkOrderStatus(orderId);
         if (!res) return;
+        
+        const orderStatus = res?.data?.status || res?.status || '';
+        const paymentStatus = res?.data?.payment_status || res?.payment_status || orderStatus;
+        
         // update history entry
-        setHistory(prev => prev.map(p => (String(p.id) === String(paymentId) ? { ...p, status: res.status || p.status, updatedAt: res.updatedAt } : p)));
+        setHistory(prev => prev.map(p => 
+          (String(p.orderId || p.id) === String(orderId) 
+            ? { ...p, status: paymentStatus || p.status, updatedAt: new Date().toISOString() } 
+            : p)
+        ));
+        
         // stop polling on final states
-        const st = (res.status || '').toLowerCase();
-        if (['success', 'failed', 'error', 'cancelled'].includes(st)) {
+        const st = (paymentStatus || '').toLowerCase();
+        if (['success', 'completed', 'paid', 'failed', 'error', 'cancelled'].includes(st)) {
           clearInterval(iv);
-          delete pollingRef.current[paymentId];
+          delete pollingRef.current[orderId];
           // if payment succeeded and we have a pending booking attached, create the booking
-          if (st === 'success' && pendingBookingsRef.current[paymentId]) {
-            const bk = pendingBookingsRef.current[paymentId];
+          if ((st === 'success' || st === 'completed' || st === 'paid') && pendingBookingsRef.current[orderId]) {
+            const bk = pendingBookingsRef.current[orderId];
             try {
               await bookingsApi.create({
                 propertyId: bk.propertyId,
@@ -108,7 +164,7 @@ export default function Payment() {
                 totalAmount: bk.totalAmount,
               });
               // remove pending mapping
-              delete pendingBookingsRef.current[paymentId];
+              delete pendingBookingsRef.current[orderId];
               // navigate to user's bookings
               navigate('/dashboard/bookings');
             } catch (err) {
@@ -120,9 +176,10 @@ export default function Payment() {
         }
       } catch (e) {
         // ignore transient errors
+        console.warn('Polling error:', e);
       }
     }, 3000);
-    pollingRef.current[paymentId] = iv;
+    pollingRef.current[orderId] = iv;
   };
 
   const getStatusBadge = (status: string) => {
@@ -133,11 +190,11 @@ export default function Payment() {
         icon: <CheckCircle className="w-4 h-4" />, 
         text: 'Success' 
       };
-    } else if (statusLower === 'pending' || statusLower === 'processing') {
+    } else if (statusLower === 'pending' || statusLower === 'processing' || statusLower === 'payment_initiated') {
       return { 
         class: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
         icon: <Clock className="w-4 h-4" />, 
-        text: 'Pending' 
+        text: statusLower === 'payment_initiated' ? 'Payment Initiated' : 'Pending' 
       };
     } else if (statusLower === 'failed' || statusLower === 'error' || statusLower === 'cancelled') {
       return { 
@@ -205,7 +262,7 @@ export default function Payment() {
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none transition-all" 
-                  placeholder="07XXXXXXXX" 
+                  placeholder={(user as any)?.phoneNumber || "07XXXXXXXX"} 
                   type="tel"
                 />
                 <p className="mt-1 text-xs text-gray-500">Enter your mobile money registered phone number</p>

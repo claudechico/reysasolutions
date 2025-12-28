@@ -31,8 +31,8 @@ export default function AdminCMS() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="flex-1 lg:ml-72">
+          <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex items-center space-x-3 mb-2">

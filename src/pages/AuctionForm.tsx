@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { auctionsApi, propertiesApi, categoriesApi, PropertyDto, CategoryDto } from '../lib/api';
-import { Save, ArrowLeft, X, Plus, Image as ImageIcon, Gavel } from 'lucide-react';
+import { Save, ArrowLeft, X, Plus, Image as ImageIcon, Gavel, Car, Calendar, Gauge, Palette, CheckCircle, Fuel, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AdminSidebar from '../components/AdminSidebar';
 
@@ -42,6 +42,18 @@ export default function AuctionForm() {
     startingPrice: '',
     reservePrice: '',
     bidIncrement: '',
+    auctionType: 'property', // 'property', 'car', 'office', 'other'
+    vehicleInfo: '', // Manual vehicle information for car auctions (legacy)
+    officeInfo: '', // Manual office property information for office auctions
+    // Car-specific fields
+    carMake: '',
+    carModel: '',
+    carYear: '',
+    carMileage: '',
+    carColor: '',
+    carCondition: '',
+    carFuelType: '',
+    carTransmission: '',
   });
 
   useEffect(() => {
@@ -57,23 +69,66 @@ export default function AuctionForm() {
       return;
     }
 
-    loadProperties();
     loadCategories();
 
     if (id && id !== 'new') {
       loadAuction();
+    } else {
+      loadProperties();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    // Reload properties when auction type changes (only if user is loaded and not editing existing auction)
+    if (user && (!id || id === 'new')) {
+      loadProperties(formData.auctionType);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.auctionType]);
 
   const getBackPath = () => {
     const userRole = String((user as any)?.role || '').toLowerCase();
     return userRole === 'admin' ? '/admin' : '/dashboard';
   };
 
-  const loadProperties = async () => {
+  const loadProperties = async (auctionType?: string) => {
     try {
       const res = await propertiesApi.list({ page: 1, limit: 1000 });
-      setProperties(res.properties || []);
+      // Filter properties based on auction type
+      const typeToFilter = auctionType || formData.auctionType;
+      let filteredProperties = res.properties || [];
+      
+      if (typeToFilter === 'car') {
+        // Filter for car-related categories or properties with car in title/type
+        filteredProperties = filteredProperties.filter(p => 
+          p.property_type?.toLowerCase().includes('car') ||
+          p.title?.toLowerCase().includes('car') ||
+          p.title?.toLowerCase().includes('vehicle') ||
+          p.category?.name?.toLowerCase().includes('car') ||
+          p.category?.name?.toLowerCase().includes('vehicle')
+        );
+      } else if (typeToFilter === 'office') {
+        // Filter for office-related properties
+        filteredProperties = filteredProperties.filter(p => 
+          p.property_type?.toLowerCase().includes('office') ||
+          p.property_type?.toLowerCase().includes('commercial') ||
+          p.title?.toLowerCase().includes('office') ||
+          p.category?.name?.toLowerCase().includes('office') ||
+          p.category?.name?.toLowerCase().includes('commercial')
+        );
+      } else if (typeToFilter === 'property') {
+        // Filter for property types (house, apartment, etc.)
+        filteredProperties = filteredProperties.filter(p => 
+          ['house', 'apartment', 'villa', 'townhouse', 'condo', 'plot', 'land'].some(type => 
+            p.property_type?.toLowerCase().includes(type) ||
+            p.category?.name?.toLowerCase().includes(type)
+          )
+        );
+      }
+      // For 'other' type, show all properties
+      
+      setProperties(filteredProperties);
     } catch (err) {
       console.error('Failed to load properties', err);
     }
@@ -114,6 +169,7 @@ export default function AuctionForm() {
         });
       }
 
+      const auctionData = auction as any;
       setFormData({
         title: auction.title || '',
         description: auction.description || '',
@@ -125,8 +181,22 @@ export default function AuctionForm() {
         startingPrice: auction.startingPrice ? String(auction.startingPrice) : '',
         reservePrice: auction.reservePrice ? String(auction.reservePrice) : '',
         bidIncrement: auction.bidIncrement ? String(auction.bidIncrement) : '',
+        auctionType: auctionData.auctionType || 'property',
+        vehicleInfo: auctionData.vehicleInfo || '',
+        officeInfo: auctionData.officeInfo || '',
+        carMake: auctionData.carMake || '',
+        carModel: auctionData.carModel || '',
+        carYear: auctionData.carYear || '',
+        carMileage: auctionData.carMileage || '',
+        carColor: auctionData.carColor || '',
+        carCondition: auctionData.carCondition || '',
+        carFuelType: auctionData.carFuelType || '',
+        carTransmission: auctionData.carTransmission || '',
       });
       setImageUrls(images);
+      // Load properties after setting auction type
+      const auctionType = (auction as any).auctionType || 'property';
+      setTimeout(() => loadProperties(auctionType), 100);
     } catch (err: any) {
       setError(err?.message || 'Failed to load auction');
     } finally {
@@ -202,6 +272,16 @@ export default function AuctionForm() {
         return;
       }
 
+      // Validate car fields if auction type is 'car'
+      if (formData.auctionType === 'car') {
+        if (!formData.carMake || !formData.carModel || !formData.carYear || !formData.carMileage || 
+            !formData.carColor || !formData.carCondition || !formData.carFuelType || !formData.carTransmission) {
+          setError('Please fill in all required car details');
+          setLoading(false);
+          return;
+        }
+      }
+
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
       
@@ -214,7 +294,7 @@ export default function AuctionForm() {
       const payload: any = {
         title: formData.title,
         description: formData.description || undefined,
-        propertyId: formData.propertyId ? Number(formData.propertyId) : null,
+        propertyId: (formData.auctionType === 'car' || formData.auctionType === 'office') ? null : (formData.propertyId ? Number(formData.propertyId) : null),
         categoryId: formData.categoryId ? Number(formData.categoryId) : null,
         phoneNumber: formData.phoneNumber || null,
         startDate: formData.startDate,
@@ -222,6 +302,18 @@ export default function AuctionForm() {
         startingPrice: Number(formData.startingPrice),
         reservePrice: formData.reservePrice ? Number(formData.reservePrice) : null,
         bidIncrement: formData.bidIncrement ? Number(formData.bidIncrement) : 0,
+        auctionType: formData.auctionType,
+        vehicleInfo: formData.auctionType === 'car' ? (formData.vehicleInfo || undefined) : undefined,
+        officeInfo: formData.auctionType === 'office' ? (formData.officeInfo || undefined) : undefined,
+        // Car-specific fields
+        carMake: formData.auctionType === 'car' ? (formData.carMake || undefined) : undefined,
+        carModel: formData.auctionType === 'car' ? (formData.carModel || undefined) : undefined,
+        carYear: formData.auctionType === 'car' ? (formData.carYear || undefined) : undefined,
+        carMileage: formData.auctionType === 'car' ? (formData.carMileage ? Number(formData.carMileage) : undefined) : undefined,
+        carColor: formData.auctionType === 'car' ? (formData.carColor || undefined) : undefined,
+        carCondition: formData.auctionType === 'car' ? (formData.carCondition || undefined) : undefined,
+        carFuelType: formData.auctionType === 'car' ? (formData.carFuelType || undefined) : undefined,
+        carTransmission: formData.auctionType === 'car' ? (formData.carTransmission || undefined) : undefined,
       };
 
       // Send images as base64 data URLs or existing URLs
@@ -261,16 +353,16 @@ export default function AuctionForm() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <AdminSidebar />
-      <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-          <div className="mb-6">
-            <button
-              onClick={() => navigate(getBackPath())}
-              className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition mb-4"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>{t('auctions.backToDashboard')}</span>
-            </button>
+      <div className="flex-1 lg:ml-72">
+        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(getBackPath())}
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>{t('auctions.backToDashboard')}</span>
+          </button>
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
               <Gavel className="w-6 h-6 text-white" />
@@ -314,22 +406,224 @@ export default function AuctionForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('auctions.propertyLabel')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Auction Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.auctionType}
+              onChange={(e) => {
+                setFormData({ 
+                  ...formData, 
+                  auctionType: e.target.value, 
+                  propertyId: '', 
+                  categoryId: '', 
+                  vehicleInfo: '', 
+                  officeInfo: '',
+                  carMake: '',
+                  carModel: '',
+                  carYear: '',
+                  carMileage: '',
+                  carColor: '',
+                  carCondition: '',
+                  carFuelType: '',
+                  carTransmission: '',
+                });
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+            >
+              <option value="property">Property (House, Apartment, etc.)</option>
+              <option value="car">Car / Vehicle</option>
+              <option value="office">Office / Commercial Property</option>
+              <option value="other">Other</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Select the type of item being auctioned</p>
+          </div>
+
+          {/* Car Details Section */}
+          {formData.auctionType === 'car' && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center space-x-2">
+                <Car className="w-5 h-5 text-blue-600" />
+                <span>Car Details</span>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Car className="w-4 h-4 text-gray-500" />
+                    <span>Make <span className="text-red-500">*</span></span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.carMake}
+                    onChange={(e) => setFormData({ ...formData, carMake: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g., Toyota"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Car className="w-4 h-4 text-gray-500" />
+                    <span>Model <span className="text-red-500">*</span></span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.carModel}
+                    onChange={(e) => setFormData({ ...formData, carModel: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g., Camry"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span>Year <span className="text-red-500">*</span></span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.carYear}
+                    onChange={(e) => setFormData({ ...formData, carYear: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g., 2020"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Gauge className="w-4 h-4 text-gray-500" />
+                    <span>Mileage (km) <span className="text-red-500">*</span></span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={formData.carMileage}
+                    onChange={(e) => setFormData({ ...formData, carMileage: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g., 50000"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Palette className="w-4 h-4 text-gray-500" />
+                    <span>Color <span className="text-red-500">*</span></span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.carColor}
+                    onChange={(e) => setFormData({ ...formData, carColor: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    placeholder="e.g., Black"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4 text-gray-500" />
+                    <span>Condition <span className="text-red-500">*</span></span>
+                  </label>
+                  <select
+                    required
+                    value={formData.carCondition}
+                    onChange={(e) => setFormData({ ...formData, carCondition: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">Select Condition</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Very Good">Very Good</option>
+                    <option value="Good">Good</option>
+                    <option value="Fair">Fair</option>
+                    <option value="Poor">Poor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Fuel className="w-4 h-4 text-gray-500" />
+                    <span>Fuel Type <span className="text-red-500">*</span></span>
+                  </label>
+                  <select
+                    required
+                    value={formData.carFuelType}
+                    onChange={(e) => setFormData({ ...formData, carFuelType: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">Select Fuel Type</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="CNG">CNG</option>
+                    <option value="LPG">LPG</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                    <Settings className="w-4 h-4 text-gray-500" />
+                    <span>Transmission <span className="text-red-500">*</span></span>
+                  </label>
+                  <select
+                    required
+                    value={formData.carTransmission}
+                    onChange={(e) => setFormData({ ...formData, carTransmission: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">Select Transmission</option>
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                    <option value="CVT">CVT</option>
+                    <option value="Semi-Automatic">Semi-Automatic</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+            {formData.auctionType === 'office' ? (
+              <div className="lg:col-span-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Office Property Information <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.officeInfo}
+                  onChange={(e) => setFormData({ ...formData, officeInfo: e.target.value, propertyId: '' })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                  placeholder="e.g., Office Space in City Center, Commercial Building in Business District, etc."
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter office property details (location, size, type, etc.)</p>
+              </div>
+            ) : (
+              <div className="lg:col-span-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('auctions.propertyLabel')}
+                </label>
               <select
                 value={formData.propertyId}
                 onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
               >
                 <option value="">{t('auctions.selectProperty')}</option>
-                {properties.map((p) => (
+                  {properties.length === 0 ? (
+                    <option value="" disabled>No properties available</option>
+                  ) : (
+                    properties.map((p) => (
                   <option key={p.id} value={String(p.id)}>{p.title}</option>
-                ))}
+                    ))
+                  )}
               </select>
+                {properties.length === 0 && formData.auctionType !== 'other' && (
+                  <p className="text-xs text-orange-600 mt-1">
+                    No properties found. You can still create the auction without linking a property.
+                  </p>
+                )}
             </div>
+            )}
 
-            <div>
+            <div className="lg:col-span-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('auctions.categoryLabel')}</label>
               <select
                 value={formData.categoryId}
@@ -344,8 +638,8 @@ export default function AuctionForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+            <div className="lg:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('auctions.phoneLabel')}</label>
               <input
                 type="tel"
@@ -356,7 +650,7 @@ export default function AuctionForm() {
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-7">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auctions.startingPriceLabel')} <span className="text-red-500">*</span>
               </label>
@@ -373,8 +667,8 @@ export default function AuctionForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-10 gap-6">
+            <div className="lg:col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auctions.reservePriceLabel')} ({t('auctions.optional')})
               </label>
@@ -389,7 +683,7 @@ export default function AuctionForm() {
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('auctions.bidIncrementLabel')}</label>
               <input
                 type="number"

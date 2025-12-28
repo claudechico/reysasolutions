@@ -72,10 +72,12 @@ export default function AdminBookings() {
   if (loading && bookings.length === 0) {
     return (
       <AdminProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50 pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
-            <p className="text-gray-600">Loading bookings...</p>
+        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4" />
+              <p className="text-gray-600">Loading bookings...</p>
+            </div>
           </div>
         </div>
       </AdminProtectedRoute>
@@ -86,25 +88,25 @@ export default function AdminBookings() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="flex-1 lg:ml-72">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-center space-x-3 mb-2">
-              <Calendar className="w-8 h-8 text-dark-blue-500" />
-              <h1 className="text-3xl font-bold text-gray-900">Bookings Management</h1>
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+              <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-dark-blue-500" />
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Bookings Management</h1>
             </div>
-            <p className="text-gray-600">Review and manage all bookings across the platform</p>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">Review and manage all bookings across the platform</p>
           </div>
 
           {/* Filters and Actions */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-            <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex-1 w-full">
                 <select 
                   value={statusFilter} 
                   onChange={(e) => { setPage(1); setStatusFilter(e.target.value); }} 
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none text-sm sm:text-base"
                 >
                   <option value="">All Statuses</option>
                   <option value="pending">Pending</option>
@@ -115,7 +117,7 @@ export default function AdminBookings() {
               </div>
               <button 
                 onClick={() => load(1)} 
-                className="w-full md:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 flex items-center justify-center space-x-2"
+                className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -123,8 +125,70 @@ export default function AdminBookings() {
             </div>
           </div>
 
-          {/* Bookings Table */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          {/* Bookings - Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            {bookings.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
+                <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-sm text-gray-600 font-medium">No bookings found.</p>
+              </div>
+            ) : (
+              bookings.map(b => (
+                <div key={b.id} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm text-gray-900 mb-1">#{b.id}</div>
+                      <div className="font-semibold text-base text-gray-900 mb-1 truncate">{b.property?.title || b.propertyTitle || b.properties?.title || '—'}</div>
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">{b.property?.city || b.propertyCity || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(b.status)}`}>
+                      {getStatusIcon(b.status)}
+                      <span className="capitalize">{b.status}</span>
+                    </span>
+                  </div>
+                  <div className="space-y-2 mb-3 text-sm">
+                    <div className="flex items-center text-gray-900">
+                      <User className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{b.guest?.name || b.guestName || b.user?.name || 'Guest'}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center text-gray-900">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <div>
+                          <div className="font-medium">Check-in:</div>
+                          <div className="text-gray-600 text-xs">{formatDate(b.startDate || b.check_in)}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center text-gray-900">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <div>
+                          <div className="font-medium">Check-out:</div>
+                          <div className="text-gray-600 text-xs">{formatDate(b.endDate || b.check_out)}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-base font-semibold text-dark-blue-500 pt-2 border-t border-gray-200">
+                      <DollarSign className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span>Tsh {formatPrice(
+                        b.totalAmount || 
+                        b.total_price || 
+                        b.amount || 
+                        b.price || 
+                        (b.property?.price ? Number(b.property.price) : 0) || 
+                        0
+                      )}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Bookings - Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
@@ -142,7 +206,7 @@ export default function AdminBookings() {
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center">
                         <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-600 font-medium">No bookings found.</p>
+                        <p className="text-base text-gray-600 font-medium">No bookings found.</p>
                       </td>
                     </tr>
                   ) : (
@@ -154,9 +218,9 @@ export default function AdminBookings() {
                         <td className="px-6 py-4">
                           <div className="flex items-start space-x-3">
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-900 mb-1">{b.property?.title || b.propertyTitle || b.properties?.title || '—'}</div>
+                              <div className="font-semibold text-sm text-gray-900 mb-1 truncate">{b.property?.title || b.propertyTitle || b.properties?.title || '—'}</div>
                               <div className="flex items-center text-sm text-gray-600">
-                                <MapPin className="w-3 h-3 mr-1" />
+                                <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
                                 <span className="truncate">{b.property?.city || b.propertyCity || 'N/A'}</span>
                               </div>
                             </div>
@@ -164,19 +228,19 @@ export default function AdminBookings() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center text-sm text-gray-900">
-                            <User className="w-4 h-4 mr-2 text-gray-400" />
-                            <span>{b.guest?.name || b.guestName || b.user?.name || 'Guest'}</span>
+                            <User className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                            <span className="truncate">{b.guest?.name || b.guestName || b.user?.name || 'Guest'}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
                             <div className="flex items-center mb-1">
-                              <Calendar className="w-3 h-3 mr-1 text-gray-400" />
+                              <Calendar className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
                               <span className="font-medium">Check-in:</span>
                             </div>
                             <div className="text-gray-600 ml-4">{formatDate(b.startDate || b.check_in)}</div>
                             <div className="flex items-center mt-2 mb-1">
-                              <Calendar className="w-3 h-3 mr-1 text-gray-400" />
+                              <Calendar className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
                               <span className="font-medium">Check-out:</span>
                             </div>
                             <div className="text-gray-600 ml-4">{formatDate(b.endDate || b.check_out)}</div>

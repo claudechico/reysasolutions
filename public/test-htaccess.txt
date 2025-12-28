@@ -1,0 +1,3 @@
+If you can see this file, .htaccess is working but may need configuration.
+This file should be accessible at: yourdomain.com/test-htaccess.txt
+

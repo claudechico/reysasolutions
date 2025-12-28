@@ -86,40 +86,35 @@ export default function AdminSidebar() {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl z-40 flex flex-col transition-transform duration-300 ${
-        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 lg:fixed`}>
-        {/* Logo/Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-lg flex items-center justify-center">
-            <LayoutDashboard className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-bold">Admin Panel</h2>
-            <p className="text-xs text-gray-400">Management</p>
-          </div>
-        </div>
-      </div>
-
-      {/* User Info */}
-      <div className="p-5 sm:p-6 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg flex-shrink-0">
+        <div
+          className={`fixed left-0 w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl z-40 flex flex-col transition-transform duration-300 ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 lg:fixed`}
+          style={{ top: 'var(--app-nav-height)', height: 'calc(100% - var(--app-nav-height))' }}
+        >
+      {/* User Info - Email Only */}
+      <div className="px-2 py-2 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
+        <div className="flex items-start gap-1.5">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-lg flex-shrink-0 mt-0.5">
             {(user as any)?.name?.charAt(0)?.toUpperCase() || (user as any)?.email?.charAt(0)?.toUpperCase() || 'A'}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm sm:text-base font-semibold text-white truncate mb-1">
-              {(user as any)?.name || (user as any)?.role === 'admin' ? 'System Admin' : 'Admin'}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-300 truncate mb-1">
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div 
+              className="text-[7px] sm:text-[8px] text-gray-300" 
+              style={{ 
+                wordBreak: 'break-all', 
+                overflowWrap: 'anywhere',
+                whiteSpace: 'normal',
+                lineHeight: '1.15',
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                maxWidth: '100%'
+              }}
+            >
               {(user as any)?.email || ''}
-            </p>
-            {(user as any)?.role && (
-              <p className="text-xs text-light-blue-400 font-medium">
-                {(user as any).role.charAt(0).toUpperCase() + (user as any).role.slice(1)}
-              </p>
-            )}
+            </div>
           </div>
         </div>
       </div>

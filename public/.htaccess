@@ -1,0 +1,24 @@
+# Enable Rewrite Engine
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Skip rewrite for existing files and directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Skip rewrite for index.html
+  RewriteCond %{REQUEST_URI} !^/index\.html$
+  
+  # Rewrite all other requests to index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Fallback: If mod_rewrite is not available, use ErrorDocument
+<IfModule !mod_rewrite.c>
+  ErrorDocument 404 /index.html
+</IfModule>
+
+# Serve our SPA-friendly 404 which fetches index.html so client routes work
+ErrorDocument 404 /404.html
+

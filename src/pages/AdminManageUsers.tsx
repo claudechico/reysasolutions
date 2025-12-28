@@ -99,10 +99,12 @@ export default function AdminManageUsers() {
   if (loading) {
     return (
       <AdminProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50 pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading users...</p>
+        <div className="min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 flex items-center justify-center min-h-[200px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-dark-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading users...</p>
+            </div>
           </div>
         </div>
       </AdminProtectedRoute>
@@ -124,8 +126,8 @@ export default function AdminManageUsers() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="flex-1 lg:ml-72">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -239,73 +241,127 @@ export default function AdminManageUsers() {
             </form>
           )}
 
-          {/* Users Table */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="overflow-x-auto -mx-3 sm:mx-0">
-              <table className="w-full min-w-[800px]">
+          {/* Users - Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            {users.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-8 text-center">
+                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-sm text-gray-600 font-medium">No users found.</p>
+              </div>
+            ) : (
+              users.map(u => (
+                <div key={u.id} className="bg-white rounded-xl shadow-lg border border-gray-100 p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-light-blue-500 to-dark-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0">
+                        {(u.name || 'U').slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-sm text-gray-900 truncate">{u.name}</div>
+                        <div className="text-xs text-gray-500">ID: {String(u.id).substring(0, 8)}</div>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getRoleColor(u.role)}`}>
+                      {u.role}
+                    </span>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <Mail className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                      <span className="truncate">{u.email}</span>
+                    </div>
+                    {u.phoneNumber && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <span>{u.phoneNumber}</span>
+                      </div>
+                    )}
+                    {u.createdAt && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                        <span>{format(new Date(u.createdAt), 'MMM dd, yyyy')}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => removeUser(u.id)}
+                    className="w-full bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition flex items-center justify-center space-x-2 py-2 text-sm font-medium"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete User</span>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Users - Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">User</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">Phone</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Role</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">Joined</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden lg:table-cell">Joined</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-3 sm:px-6 py-8 sm:py-12 text-center">
-                        <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-sm sm:text-base text-gray-600 font-medium">No users found.</p>
+                      <td colSpan={6} className="px-6 py-12 text-center">
+                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-base text-gray-600 font-medium">No users found.</p>
                       </td>
                     </tr>
                   ) : (
                     users.map(u => (
                       <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <td className="px-6 py-4">
                           <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-light-blue-500 to-dark-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-light-blue-500 to-dark-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0">
                               {(u.name || 'U').slice(0, 1).toUpperCase()}
                             </div>
-                            <div className="min-w-0">
-                              <div className="font-semibold text-gray-900 truncate">{u.name}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-base text-gray-900 truncate">{u.name}</div>
                               <div className="text-xs text-gray-500">ID: {String(u.id).substring(0, 8)}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="flex items-center text-xs sm:text-sm text-gray-900">
-                            <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-400 flex-shrink-0" />
-                            <span className="truncate max-w-[150px] sm:max-w-none">{u.email}</span>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center text-sm text-gray-900">
+                            <Mail className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                            <span className="truncate">{u.email}</span>
                           </div>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-400 flex-shrink-0" />
+                        <td className="px-6 py-4">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Phone className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
                             <span>{u.phoneNumber || '-'}</span>
                           </div>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(u.role)}`}>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(u.role)}`}>
                             {u.role}
                           </span>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4 hidden lg:table-cell">
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600">
-                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-400 flex-shrink-0" />
+                        <td className="px-6 py-4 hidden lg:table-cell">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
                             <span>{u.createdAt ? format(new Date(u.createdAt), 'MMM dd, yyyy') : '-'}</span>
                           </div>
                         </td>
-                        <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <td className="px-6 py-4">
                           <button
                             onClick={() => removeUser(u.id)}
-                            className="p-1.5 sm:p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition flex items-center space-x-1"
+                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition flex items-center space-x-1"
                             title="Delete User"
                           >
-                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                            <span className="text-xs sm:text-sm font-medium hidden sm:inline">Delete</span>
+                            <Trash2 className="w-4 h-4" />
+                            <span className="text-sm font-medium">Delete</span>
                           </button>
                         </td>
                       </tr>

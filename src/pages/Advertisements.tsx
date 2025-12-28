@@ -224,10 +224,7 @@ export default function Advertisements() {
           </div>
         ) : advertisements.length > 0 ? (
           <>
-            <div className="mb-6 text-gray-600">
-              {t('advertisements.found', { count: advertisements.length })}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {advertisements.map((ad) => {
                 const imageUrl = resolveAdvertisementImage(ad);
                 const placeholder = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';

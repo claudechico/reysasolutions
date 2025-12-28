@@ -234,7 +234,7 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50" style={{ paddingTop: 'var(--app-nav-height)' }}>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <div className="text-center">
           <Loader2 className="mx-auto h-10 w-10 animate-spin text-dark-blue-500" />
           <p className="mt-3 text-sm text-gray-600">Compiling analytics snapshot…</p>
@@ -247,8 +247,8 @@ export default function AdminAnalytics() {
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
         <AdminSidebar />
-        <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-16 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
+        <div className="flex-1 lg:ml-72">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 pt-6 lg:pt-0 pb-6 sm:pb-8 lg:pb-12 space-y-6 sm:space-y-8 lg:space-y-10">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-dark-blue-600 via-dark-blue-500 to-sky-600 p-8 text-white shadow-2xl">
             <div className="absolute -top-28 right-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
             <div className="absolute bottom-0 left-1/2 hidden h-48 w-48 -translate-x-1/2 rounded-full bg-white/10 blur-3xl md:block" />

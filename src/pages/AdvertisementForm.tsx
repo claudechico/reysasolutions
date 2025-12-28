@@ -243,16 +243,16 @@ export default function AdvertisementForm() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <AdminSidebar />
-      <div className="flex-1 lg:ml-64" style={{ paddingTop: 'var(--app-nav-height)' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-          <div className="mb-6">
-            <button
-              onClick={() => navigate(getBackPath())}
-              className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition mb-4"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to Dashboard</span>
-            </button>
+      <div className="flex-1 lg:ml-72">
+        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(getBackPath())}
+            className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Dashboard</span>
+          </button>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             {id && id !== 'new' ? 'Edit Advertisement' : 'Create Advertisement'}
           </h1>
@@ -291,8 +291,8 @@ export default function AdvertisementForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+            <div className="lg:col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Property</label>
               <select
                 value={formData.propertyId}
@@ -306,7 +306,7 @@ export default function AdvertisementForm() {
               </select>
             </div>
 
-            <div>
+            <div className="lg:col-span-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
               <select
                 value={formData.categoryId}
@@ -321,8 +321,8 @@ export default function AdvertisementForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+            <div className="lg:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
               <input
                 type="tel"
@@ -333,7 +333,7 @@ export default function AdvertisementForm() {
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-7">
               <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
               <input
                 type="number"
@@ -346,8 +346,8 @@ export default function AdvertisementForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-6">
+            <div className="lg:col-span-5">
               <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
               <input
                 type="date"
@@ -357,7 +357,7 @@ export default function AdvertisementForm() {
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-5">
               <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
               <input
                 type="date"

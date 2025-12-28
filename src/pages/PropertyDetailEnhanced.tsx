@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { propertiesApi, PropertyDto, reviewsApi, ReviewDto, favoritesApi, usersApi } from '../lib/api';
+import { propertiesApi, PropertyDto, reviewsApi, ReviewDto, favoritesApi, usersApi, paymentsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart, Phone, Eye } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Square, ArrowLeft, Calendar, Home, Star, Heart, Phone, Eye, CreditCard } from 'lucide-react';
 import { formatPrice } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 
@@ -31,6 +31,8 @@ export default function PropertyDetailEnhanced() {
   const [favoriteId, setFavoriteId] = useState<string | number | null>(null);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [agentPhone, setAgentPhone] = useState<string | null>(null);
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
 
   useEffect(() => {
     loadProperty();
@@ -48,7 +50,27 @@ export default function PropertyDetailEnhanced() {
     if (id) {
       trackView();
     }
-  }, [id]);
+    
+    // Check payment status for users
+    if (user) {
+      const userRole = String((user as any).role || '').toLowerCase();
+      if (userRole === 'users') {
+        (async () => {
+          try {
+            setCheckingPayment(true);
+            const res = await paymentsApi.checkSubscription();
+            const paid = res?.isPaid || (user as any).isPaidUser || false;
+            setIsPaid(paid);
+          } catch (err) {
+            // If check fails, use user's isPaidUser field as fallback
+            setIsPaid((user as any).isPaidUser || false);
+          } finally {
+            setCheckingPayment(false);
+          }
+        })();
+      }
+    }
+  }, [id, user]);
 
   const loadProperty = async () => {
     const res = await propertiesApi.getById(id!);
@@ -622,12 +644,51 @@ export default function PropertyDetailEnhanced() {
                     
                     const prop = property as any;
                     const agentName = prop?.agent?.name || prop?.agent?.full_name || prop?.owner?.name || prop?.owner?.full_name || 'Agent';
+                    const paid = isPaid || (user as any).isPaidUser || false;
+                    
+                    // Show payment banner if not paid
+                    if (!paid && !checkingPayment) {
+                      return (
+                        <div className="mb-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-4 shadow-lg">
+                          <div className="flex items-start space-x-3">
+                            <CreditCard className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <h4 className="text-sm font-bold text-orange-900 mb-1">Payment Required</h4>
+                              <p className="text-xs text-orange-800 mb-3">
+                                You need to make a payment before contacting agents. Please subscribe to continue.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => navigate('/subscriptions')}
+                                className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md text-xs font-medium"
+                              >
+                                Go to Subscriptions
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    if (checkingPayment) {
+                      return (
+                        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-blue-800 text-xs font-medium">Checking payment status...</p>
+                        </div>
+                      );
+                    }
                     
                     if (agentPhone) {
                       return (
                         <a
-                          href={`tel:${agentPhone}`}
-                          className="w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group"
+                          href={paid ? `tel:${agentPhone}` : '#'}
+                          onClick={(e) => {
+                            if (!paid) {
+                              e.preventDefault();
+                              navigate('/subscriptions');
+                            }
+                          }}
+                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                           <span>Call {agentName}</span>
@@ -642,8 +703,14 @@ export default function PropertyDetailEnhanced() {
                     if (agentEmail) {
                       return (
                         <a
-                          href={`mailto:${agentEmail}`}
-                          className="w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group"
+                          href={paid ? `mailto:${agentEmail}` : '#'}
+                          onClick={(e) => {
+                            if (!paid) {
+                              e.preventDefault();
+                              navigate('/subscriptions');
+                            }
+                          }}
+                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >
                           <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                           <span>Contact {agentName}</span>
