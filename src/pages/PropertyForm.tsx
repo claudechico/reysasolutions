@@ -121,7 +121,7 @@ export default function PropertyForm() {
             className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Dashboard</span>
+            {/* <span>Back to Dashboard</span> */}
           </button>
         </div>
 

@@ -636,59 +636,41 @@ export default function PropertyDetailEnhanced() {
 
 
                   {(() => {
-                    const userRole = user ? String((user as any).role || '').toLowerCase() : '';
-                    // Only users with role "users" can contact agent
-                    if (!user || userRole !== 'users') {
-                      return null;
-                    }
-                    
                     const prop = property as any;
                     const agentName = prop?.agent?.name || prop?.agent?.full_name || prop?.owner?.name || prop?.owner?.full_name || 'Agent';
-                    const paid = isPaid || (user as any).isPaidUser || false;
-                    
-                    // Show payment banner if not paid
-                    if (!paid && !checkingPayment) {
-                      return (
-                        <div className="mb-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-4 shadow-lg">
-                          <div className="flex items-start space-x-3">
-                            <CreditCard className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <h4 className="text-sm font-bold text-orange-900 mb-1">Payment Required</h4>
-                              <p className="text-xs text-orange-800 mb-3">
-                                You need to make a payment before contacting agents. Please subscribe to continue.
-                              </p>
-                              <button
-                                type="button"
-                                onClick={() => navigate('/subscriptions')}
-                                className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md text-xs font-medium"
-                              >
-                                Go to Subscriptions
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    
-                    if (checkingPayment) {
+                    const paid = isPaid || (user as any)?.isPaidUser || false;
+
+                    // If we're checking payment for a logged-in user, show a small status
+                    if (checkingPayment && user) {
                       return (
                         <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <p className="text-blue-800 text-xs font-medium">Checking payment status...</p>
                         </div>
                       );
                     }
-                    
+
+                    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+
+                    const handleContactClick = (e: any, href: string | null) => {
+                      if (!user) {
+                        e.preventDefault();
+                        navigate(`/register?returnTo=${returnTo}`);
+                        return;
+                      }
+                      if (!paid) {
+                        e.preventDefault();
+                        navigate('/subscriptions');
+                        return;
+                      }
+                      // otherwise allow default behavior (call/mail)
+                    };
+
                     if (agentPhone) {
                       return (
                         <a
                           href={paid ? `tel:${agentPhone}` : '#'}
-                          onClick={(e) => {
-                            if (!paid) {
-                              e.preventDefault();
-                              navigate('/subscriptions');
-                            }
-                          }}
-                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          onClick={(e) => handleContactClick(e, agentPhone)}
+                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-90' : ''}`}
                         >
                           <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                           <span>Call {agentName}</span>
@@ -696,29 +678,21 @@ export default function PropertyDetailEnhanced() {
                         </a>
                       );
                     }
-                    
-                    // If no phone found, check if we have agent email as fallback
+
                     const agentEmail = prop?.agent?.email || prop?.owner?.email || null;
-                    
                     if (agentEmail) {
                       return (
                         <a
                           href={paid ? `mailto:${agentEmail}` : '#'}
-                          onClick={(e) => {
-                            if (!paid) {
-                              e.preventDefault();
-                              navigate('/subscriptions');
-                            }
-                          }}
-                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          onClick={(e) => handleContactClick(e, agentEmail)}
+                          className={`w-full bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:from-dark-blue-500 hover:to-dark-blue-600 transition-all shadow-lg shadow-light-blue-500/30 font-medium mb-3 flex items-center justify-center space-x-2 group ${!paid ? 'opacity-90' : ''}`}
                         >
                           <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
                           <span>Contact {agentName}</span>
                         </a>
                       );
                     }
-                    
-                    // If no contact info found, don't show anything (cleaner UI)
+
                     return null;
                   })()}
 
@@ -747,10 +721,11 @@ export default function PropertyDetailEnhanced() {
                         </div>
                       );
                     } else {
+                      const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
                       return (
                         <div className="mt-4">
                           <button
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate(`/register?returnTo=${returnTo}`)}
                             className="w-full bg-dark-blue-500 text-white px-6 py-3.5 rounded-lg hover:bg-dark-blue-600 transition font-medium"
                           >
                             {t('property.bookNow')}
@@ -764,6 +739,12 @@ export default function PropertyDetailEnhanced() {
                     const userRole = String((user as any).role || '').toLowerCase();
                     // Only show booking form if user has "users" role
                     if (userRole !== 'users') return null;
+                    const paid = isPaid || (user as any)?.isPaidUser || false;
+                    if (!paid) {
+                      // if user somehow opened booking but not subscribed, redirect to subscriptions
+                      navigate('/subscriptions');
+                      return null;
+                    }
                     return (
                     <div className="mt-4 bg-white p-4 border border-gray-100 rounded-lg">
                       {bookingError && <div className="text-sm text-red-600 mb-2">{bookingError}</div>}
@@ -779,7 +760,10 @@ export default function PropertyDetailEnhanced() {
                       </select>
                       <button
                         onClick={async () => {
-                          if (!user) { navigate('/login'); return; }
+                          const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+                          if (!user) { navigate(`/register?returnTo=${returnTo}`); return; }
+                          const paid = isPaid || (user as any)?.isPaidUser || false;
+                          if (!paid) { navigate('/subscriptions'); return; }
                           if (!bookingStart || !bookingEnd) { setBookingError(t('property.selectDates')); return; }
                           setBookingError('');
                           setBookingLoading(true);

@@ -440,7 +440,7 @@ export default function LiveChat() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-96 h-[100vh] sm:h-[600px] max-h-[100vh] sm:max-h-[600px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
+        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-96 h-[100vh] sm:h-[600px] max-h-[100vh] sm:max-h-[600px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-visible border border-gray-200">
           {/* Header with drag handle for mobile */}
           <div className="bg-gradient-to-r from-dark-blue-600 via-dark-blue-500 to-light-blue-500 text-white p-4 sm:p-5 flex items-center justify-between flex-shrink-0 shadow-lg">
             {/* Drag handle indicator for mobile */}
@@ -583,20 +583,20 @@ export default function LiveChat() {
           {/* Input Area */}
           {!showFAQ && (
             <div className="border-t-2 border-gray-300 p-4 bg-gray-50 flex-shrink-0">
-              <div className="flex space-x-3 items-center">
+              <div className="relative">
                 <input
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={i18n.language === 'sw' ? 'Andika ujumbe...' : 'Type a message...'}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none text-sm sm:text-base font-medium bg-white shadow-sm"
+                  className="w-full pr-20 px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-dark-blue-500 focus:border-dark-blue-500 outline-none text-sm sm:text-base font-medium bg-white shadow-sm"
                 />
                 <button
                   type="button"
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim()}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 min-w-[56px] min-h-[48px] rounded-xl bg-gradient-to-r from-dark-blue-700 via-dark-blue-600 to-light-blue-500 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  className="absolute right-3 inset-y-1 z-50 inline-flex items-center justify-center gap-2 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-dark-blue-700 via-dark-blue-600 to-light-blue-500 text-white font-semibold shadow-lg hover:shadow-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Send message"
                 >
                   <Send className="w-5 h-5 sm:w-6 sm:h-6" />

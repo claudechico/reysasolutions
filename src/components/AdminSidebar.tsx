@@ -92,28 +92,19 @@ export default function AdminSidebar() {
           } lg:translate-x-0 lg:fixed`}
           style={{ top: 'var(--app-nav-height)', height: 'calc(100% - var(--app-nav-height))' }}
         >
-      {/* User Info - Email Only */}
+      {/* User Info */}
       <div className="px-2 py-2 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
         <div className="flex items-start gap-1.5">
           <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-lg flex-shrink-0 mt-0.5">
             {(user as any)?.name?.charAt(0)?.toUpperCase() || (user as any)?.email?.charAt(0)?.toUpperCase() || 'A'}
           </div>
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <div 
-              className="text-[7px] sm:text-[8px] text-gray-300" 
-              style={{ 
-                wordBreak: 'break-all', 
-                overflowWrap: 'anywhere',
-                whiteSpace: 'normal',
-                lineHeight: '1.15',
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                maxWidth: '100%'
-              }}
-            >
-              {(user as any)?.email || ''}
+
+          <div className="ml-2 min-w-0">
+            <div className="text-sm font-semibold text-white truncate">
+              {(user as any)?.name || (user as any)?.email}
+            </div>
+            <div className="text-xs text-gray-300 truncate">
+              {(user as any)?.email}
             </div>
           </div>
         </div>

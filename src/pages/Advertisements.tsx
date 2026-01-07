@@ -294,15 +294,40 @@ export default function Advertisements() {
                       )}
                       <div className="flex items-center justify-between text-gray-600 border-t border-gray-100 pt-4">
                         {ad.phoneNumber && (
-                          <a
-                            href={`tel:${ad.phoneNumber.replace(/\s+/g, '')}`}
-                            onClick={(e) => e.stopPropagation()}
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const phone = String(ad.phoneNumber || '').replace(/\s+/g, '');
+                              if (!phone) return;
+                              if (!user) {
+                                alert(t('auth.loginRequiredCall'));
+                                navigate('/login');
+                                return;
+                              }
+                              try {
+                                const res = await (await import('../lib/api')).paymentsApi.checkSubscription();
+                                const isPaid = res?.isPaid || (user as any).isPaidUser || false;
+                                if (!isPaid) {
+                                  alert(t('subscriptions.subscribeToCall'));
+                                  navigate('/subscriptions');
+                                  return;
+                                }
+                              } catch (err) {
+                                const fallback = (user as any).isPaidUser || false;
+                                if (!fallback) {
+                                  alert(t('subscriptions.subscribeToCall'));
+                                  navigate('/subscriptions');
+                                  return;
+                                }
+                              }
+                              window.location.href = `tel:${phone}`;
+                            }}
                             className="flex items-center hover:text-light-blue-500 transition-colors"
                             title="Call now"
                           >
                             <Phone className="w-4 h-4 mr-1 text-light-blue-500" />
                             <span className="text-sm font-medium">{t('advertisements.call')}</span>
-                          </a>
+                          </button>
                         )}
                         {ad.startDate && (
                           <div className="flex items-center">

@@ -251,7 +251,7 @@ export default function AdvertisementForm() {
             className="flex items-center space-x-2 text-gray-600 hover:text-dark-blue-500 transition mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Dashboard</span>
+            {/* <span>Back to Dashboard</span> */}
           </button>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             {id && id !== 'new' ? 'Edit Advertisement' : 'Create Advertisement'}

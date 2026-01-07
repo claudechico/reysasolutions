@@ -142,6 +142,16 @@ export default function Auctions() {
     return now >= start && now <= end && auction.status === 'active';
   };
 
+  const getAuctionStatus = (auction: any) => {
+    try {
+      if (auction?.endDate && new Date(auction.endDate) < new Date()) return 'ended';
+    } catch (e) { /* ignore bad date */ }
+    return (auction?.status || 'active').toLowerCase();
+  };
+
+  // detect admin route (we already toggle body.admin elsewhere)
+  const isAdminPage = typeof document !== 'undefined' && document.body.classList.contains('admin');
+
   return (
     <div className="min-h-screen pt-24 bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -233,6 +243,7 @@ export default function Auctions() {
                   ? `${auction.property.city || ''}${auction.property.city && auction.property.state ? ', ' : ''}${auction.property.state || ''}`.trim()
                   : '';
                 const isActive = isAuctionActive(auction);
+                const status = getAuctionStatus(auction);
                 
                 return (
                   <div

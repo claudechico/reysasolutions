@@ -66,7 +66,7 @@ export default function Navbar() {
     <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50">
       {/* Top info strip */}
       <div className="w-full bg-dark-blue-500 text-white">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-1.5 sm:py-2 flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-0.5 sm:py-1 flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-0 text-xs sm:text-sm">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
             <span className="whitespace-nowrap truncate max-w-[150px] sm:max-w-none">{t('top.address')}</span>
@@ -100,10 +100,10 @@ export default function Navbar() {
       {/* Main navigation */}
       <nav className={`w-full bg-white border-b border-gray-200 shadow-sm ${isAdmin ? 'mt-4 md:mt-6' : ''}`}>
         <div className="w-full">
-          <div className="flex justify-between items-center h-20 sm:h-20 md:h-24 pl-2 pr-2 sm:pl-3 sm:pr-4 lg:pl-4 lg:pr-6">
+          <div className="flex justify-between items-center h-16 sm:h-16 md:h-20 pl-2 pr-2 sm:pl-3 sm:pr-4 lg:pl-4 lg:pr-6">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity flex-shrink-0 px-3 py-1 bg-white">
               <div className="relative">
-                <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 overflow-hidden bg-white flex items-center justify-center p-0">
+                <div className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 overflow-hidden bg-white flex items-center justify-center p-0">
                   <img
                     src="/images/logo.jpg"
                     alt="ReysaSolution Logo"

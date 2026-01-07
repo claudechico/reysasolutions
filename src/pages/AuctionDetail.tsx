@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { auctionsApi, AuctionDto } from '../lib/api';
+import { auctionsApi, AuctionDto, paymentsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { MapPin, ArrowLeft, Calendar, Gavel, Phone, Clock, DollarSign, TrendingUp } from 'lucide-react';
+import AdvertisementBanner from '../components/AdvertisementBanner';
 import { useTranslation } from 'react-i18next';
 import { formatPrice } from '../lib/format';
 
@@ -162,6 +163,9 @@ export default function AuctionDetail() {
               )}
             </div>
 
+            {/* Advertisement banner (shared) */}
+            <AdvertisementBanner />
+
             {/* Title and Status */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-start justify-between mb-4">
@@ -245,16 +249,43 @@ export default function AuctionDetail() {
             </div>
 
             {/* Contact Information */}
-            {auction.phoneNumber && (
+              {auction.phoneNumber && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('auctions.contactInfo')}</h2>
-                <a
-                  href={`tel:${auction.phoneNumber.replace(/\s+/g, '')}`}
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const phone = String(auction.phoneNumber || '').replace(/\s+/g, '');
+                    if (!phone) return;
+                    if (!user) {
+                      alert(t('auth.loginRequiredCall'));
+                      navigate('/login');
+                      return;
+                    }
+                    try {
+                      const res = await paymentsApi.checkSubscription();
+                      const isPaid = res?.isPaid || (user as any).isPaidUser || false;
+                      if (!isPaid) {
+                        alert(t('subscriptions.subscribeToCall'));
+                        navigate('/subscriptions');
+                        return;
+                      }
+                    } catch (err) {
+                      const fallback = (user as any).isPaidUser || false;
+                      if (!fallback) {
+                        alert(t('subscriptions.subscribeToCall'));
+                        navigate('/subscriptions');
+                        return;
+                      }
+                    }
+                    // All good — initiate call
+                    window.location.href = `tel:${phone}`;
+                  }}
                   className="inline-flex items-center space-x-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all font-semibold"
                 >
                   <Phone className="w-5 h-5" />
                   <span>{auction.phoneNumber}</span>
-                </a>
+                </button>
               </div>
             )}
           </div>
@@ -328,13 +359,39 @@ export default function AuctionDetail() {
                 )}
 
                 {auction.phoneNumber && (
-                  <a
-                    href={`tel:${auction.phoneNumber.replace(/\s+/g, '')}`}
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const phone = String(auction.phoneNumber || '').replace(/\s+/g, '');
+                      if (!phone) return;
+                      if (!user) {
+                        alert(t('auth.loginRequiredCall'));
+                        navigate('/login');
+                        return;
+                      }
+                      try {
+                        const res = await paymentsApi.checkSubscription();
+                        const isPaid = res?.isPaid || (user as any).isPaidUser || false;
+                        if (!isPaid) {
+                          alert(t('subscriptions.subscribeToCall'));
+                          navigate('/subscriptions');
+                          return;
+                        }
+                      } catch (err) {
+                        const fallback = (user as any).isPaidUser || false;
+                        if (!fallback) {
+                          alert(t('subscriptions.subscribeToCall'));
+                          navigate('/subscriptions');
+                          return;
+                        }
+                      }
+                      window.location.href = `tel:${phone}`;
+                    }}
                     className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-emerald-700 transition font-medium"
                   >
                     <Phone className="w-5 h-5" />
                     <span>{t('auctions.call')}</span>
-                  </a>
+                  </button>
                 )}
               </div>
 

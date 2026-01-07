@@ -31,7 +31,7 @@ export default function VerifyOTP() {
   return (
     <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Verify Email OTP</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Verify Mobile Number OTP</h1>
         {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">{error}</div>}
         {success && <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">{success}</div>}
         {!success && (
