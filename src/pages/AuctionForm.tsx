@@ -5,6 +5,7 @@ import { auctionsApi, propertiesApi, categoriesApi, PropertyDto, CategoryDto } f
 import { Save, ArrowLeft, X, Plus, Image as ImageIcon, Gavel, Car, Calendar, Gauge, Palette, CheckCircle, Fuel, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AdminSidebar from '../components/AdminSidebar';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5558';
 
@@ -333,7 +334,7 @@ export default function AuctionForm() {
 
       navigate('/auctions');
     } catch (err: any) {
-      setError(err?.message || t('auctions.saveError'));
+      setError(getFriendlyErrorMessage(err, 'Failed to save auction. Please check your input and try again.'));
     } finally {
       setLoading(false);
     }

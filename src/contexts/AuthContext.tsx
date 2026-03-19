@@ -6,7 +6,7 @@ interface AuthContextType {
   user: BackendUser | null;
   loading: boolean;
   signUp: (payload: { name: string; email: string; phoneNumber: string; password: string; role?: string }) => Promise<{ error?: string; verificationToken?: string; userId?: string | number; email?: string }>;
-  signIn: (email: string, password: string) => Promise<{ error?: string; user?: BackendUser }>;
+  signIn: (emailOrPhone: string, password: string) => Promise<{ error?: string; user?: BackendUser }>;
   signOut: () => Promise<void>;
 }
 
@@ -28,16 +28,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           parsed.role = String(parsed.role || '').toLowerCase().trim();
         }
         setUser(parsed);
-        try {
+        if (import.meta.env.DEV) {
           // eslint-disable-next-line no-console
           console.debug('[Auth] loaded user from storage:', parsed);
-        } catch {}
+        }
       } catch {
         localStorage.removeItem('auth_user');
         localStorage.removeItem('auth_token');
       }
     }
     setLoading(false);
+  }, []);
+
+  // When API returns 401, api.ts clears storage and dispatches auth:logout — sync state
+  useEffect(() => {
+    const onLogout = () => setUser(null);
+    window.addEventListener('auth:logout', onLogout);
+    return () => window.removeEventListener('auth:logout', onLogout);
   }, []);
 
   const signUp: AuthContextType['signUp'] = async (payload) => {
@@ -59,19 +66,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn: AuthContextType['signIn'] = async (email, password) => {
+  const signIn: AuthContextType['signIn'] = async (emailOrPhone, password) => {
     try {
-      const res = await authApi.login(email, password);
+      const res = await authApi.login(emailOrPhone, password);
       // normalize and persist role so checks are consistent
       const userObj = { ...(res.user || {}) } as any;
       userObj.role = String(userObj.role || '').toLowerCase().trim();
       localStorage.setItem('auth_token', res.token);
       localStorage.setItem('auth_user', JSON.stringify(userObj));
       setUser(userObj);
-      try {
+      if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.debug('[Auth] signIn normalized user:', userObj, 'rawUser:', res.user);
-      } catch {}
+      }
       return { user: res.user } as any;
     } catch (e: any) {
       const msg = e?.message || e?.response?.data?.message || e?.response?.data?.error || 'Login failed';

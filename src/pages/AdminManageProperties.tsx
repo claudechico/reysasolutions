@@ -3,6 +3,7 @@ import AdminProtectedRoute from '../components/AdminProtectedRoute';
 import AdminSidebar from '../components/AdminSidebar';
 import { adminListingsApi } from '../lib/api';
 import { useTranslation } from 'react-i18next';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 import {
   Search,
   X,
@@ -136,22 +137,11 @@ export default function AdminManageProperties() {
       if (query && query.trim().length > 0) {
         // use admin listings endpoint to ensure we retrieve all listings (including unapproved)
         const res: any = await adminListingsApi.list({ page: 1, limit: 1000 });
-        console.log('[AdminManageProperties] Search API response:', res);
+        if (import.meta.env.DEV) {
+          console.log('[AdminManageProperties] Search API response:', res);
+          console.log('[AdminManageProperties] All properties for search:', res?.properties?.length || 0);
+        }
         const all = res?.properties || [];
-        
-        // Log each property's status-related fields for debugging
-        console.log('[AdminManageProperties] All properties for search:', all.length);
-        all.forEach((property: any, index: number) => {
-          console.log(`[AdminManageProperties] Search Property ${index + 1}:`, {
-            id: property.id,
-            title: property.title,
-            status: property.status,
-            listing_type: property.listing_type,
-            moderationStatus: property.moderationStatus,
-            is_approved: property.is_approved,
-            fullProperty: property
-          });
-        });
         
         const q = query.trim().toLowerCase();
         const filtered = all.filter((p: any) => {
@@ -172,32 +162,25 @@ export default function AdminManageProperties() {
 
       // For admin view, use the admin listings endpoint which returns all listings for moderation
       const res: any = await adminListingsApi.list({ page: forPage, limit });
-      console.log('[AdminManageProperties] API response:', res);
+      if (import.meta.env.DEV) {
+        console.log('[AdminManageProperties] API response:', res);
+        console.log('[AdminManageProperties] Properties received:', res?.properties?.length || 0);
+      }
       
       if (res?.properties) {
-        // Log each property's status-related fields for debugging
-        console.log('[AdminManageProperties] Properties received:', res.properties.length);
-        res.properties.forEach((property: any, index: number) => {
-          console.log(`[AdminManageProperties] Property ${index + 1}:`, {
-            id: property.id,
-            title: property.title,
-            status: property.status,
-            listing_type: property.listing_type,
-            moderationStatus: property.moderationStatus,
-            is_approved: property.is_approved,
-            fullProperty: property
-          });
-        });
-        
         setProps(res.properties);
         setTotal(res.pagination?.total ?? res.total ?? (res.properties ? res.properties.length : 0));
       } else {
-        console.log('[AdminManageProperties] No properties in response');
+        if (import.meta.env.DEV) {
+          console.log('[AdminManageProperties] No properties in response');
+        }
         setProps([]);
         setTotal(0);
       }
     } catch (e) {
-      console.error('Failed to load properties', e);
+      if (import.meta.env.DEV) {
+        console.error('Failed to load properties', e);
+      }
       setProps([]);
       setTotal(0);
     } finally { setLoading(false); }
@@ -214,16 +197,16 @@ export default function AdminManageProperties() {
         response = await adminListingsApi.decline(id);
       }
       
-      // Log response for debugging
-      console.log(`${approved ? 'Approve' : 'Decline'} response:`, response);
-      
       // Update local state with the property object from response if available
       const responseAny = response as any;
+      if (import.meta.env.DEV) {
+        console.log(`${approved ? 'Approve' : 'Decline'} response:`, response);
+      }
       if (responseAny?.property) {
         const updatedProperty = responseAny.property;
-        console.log('Updated property from response:', updatedProperty);
-        console.log('is_approved value:', updatedProperty.is_approved, 'type:', typeof updatedProperty.is_approved);
-        console.log('status value:', updatedProperty.status);
+        if (import.meta.env.DEV) {
+          console.log('Updated property from response:', updatedProperty);
+        }
         
         setProps((prev) =>
           prev.map((p) => {
@@ -269,8 +252,7 @@ export default function AdminManageProperties() {
       }
     } catch (e: any) {
       console.error(`${approved ? 'Approve' : 'Decline'} action failed:`, e);
-      const errorMessage = e?.message || e?.body?.message || e?.body?.error || 'Unknown error';
-      alert(`${approved ? 'Approve' : 'Decline'} failed: ${errorMessage}`);
+      alert(`${approved ? 'Approve' : 'Decline'} failed: ${getFriendlyErrorMessage(e, `Failed to ${approved ? 'approve' : 'decline'} property. Please try again.`)}`);
       // Reload to get fresh data
       await load(page);
     } finally {
@@ -301,8 +283,7 @@ export default function AdminManageProperties() {
       await load(page);
     } catch (e: any) {
       console.error('Delete failed:', e);
-      const errorMessage = e?.message || e?.body?.message || e?.body?.error || 'Unknown error';
-      alert('Delete failed: ' + errorMessage);
+      alert('Delete failed: ' + getFriendlyErrorMessage(e, 'Failed to delete property. Please try again.'));
       // Reload to get fresh data
       await load(page);
     } finally {
@@ -360,7 +341,7 @@ export default function AdminManageProperties() {
           </div>
 
           {/* Search Bar */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100/80 p-4 sm:p-6 mb-4 sm:mb-6 backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex-1 w-full relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -373,7 +354,7 @@ export default function AdminManageProperties() {
               </div>
               <button 
                 onClick={() => { setPage(1); load(1); }} 
-                className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                className="w-full sm:w-auto bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all shadow-lg shadow-dark-blue-500/30 hover:shadow-xl hover:shadow-dark-blue-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 text-sm sm:text-base font-medium"
               >
                 <Search className="w-4 h-4" />
                 <span>{t('admin.manageProperties.search')}</span>

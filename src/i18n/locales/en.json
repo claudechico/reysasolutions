@@ -92,6 +92,7 @@
     "signUp": "Sign up",
     "signIn": "Sign In",
     "signingIn": "Signing in...",
+    "sessionExpired": "Your session expired. Please log in again.",
     "fullName": "Full Name",
     "enterFullName": "Enter your full name",
     "resetLink":"Send Reset Link"   
@@ -501,7 +502,8 @@
     "subtitle": "Manage your subscriptions and view payment status.",
     "customerSubscription": "Customer Subscription",
     "ownerAgentSubscription": "Owner/Agent Subscription",
-    "customerDescription": "Subscribe to access premium features as a customer",
+    "customerDescription": "Subscribe to book properties, call agents, and send messages.",
+    "customerBenefits": "With an active subscription you can: make bookings, call agents, and send messages.",
     "ownerAgentDescription": "Subscribe to list and manage your properties",
     "price": "Price",
     "perSubscription": "per subscription",
@@ -517,7 +519,9 @@
     "renew": "Renew",
     "renewSuccess": "Subscription renewed successfully.",
     "loadError": "Failed to load subscriptions",
-    "renewError": "Failed to renew subscription"
+    "renewError": "Failed to renew subscription",
+    "subscribeToCall": "You need an active subscription to call or send messages. Please subscribe first.",
+    "subscribeToBook": "You need an active subscription to make bookings. Please subscribe first."
   },
   "contact": {
     "getInTouch": "Get in Touch",

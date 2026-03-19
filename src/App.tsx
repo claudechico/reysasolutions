@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
+import RequireSubscription from './components/RequireSubscription';
 import Home from './pages/Home';
 import Properties from './pages/Properties';
 import PropertyDetailEnhanced from './pages/PropertyDetailEnhanced';
@@ -43,7 +45,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <InnerApp />
+        <SubscriptionProvider>
+          <InnerApp />
+        </SubscriptionProvider>
       </AuthProvider>
     </BrowserRouter>
   );
@@ -81,7 +85,9 @@ function InnerApp() {
                 path="/dashboard/properties/new"
                 element={
                   <ProtectedRoute>
-                    <PropertyFormEnhanced />
+                    <RequireSubscription requiredFor="propertyCreate">
+                      <PropertyFormEnhanced />
+                    </RequireSubscription>
                   </ProtectedRoute>
                 }
               />
@@ -89,7 +95,9 @@ function InnerApp() {
                 path="/dashboard/properties/:id/edit"
                 element={
                   <ProtectedRoute>
-                    <PropertyFormEnhanced />
+                    <RequireSubscription requiredFor="propertyCreate">
+                      <PropertyFormEnhanced />
+                    </RequireSubscription>
                   </ProtectedRoute>
                 }
               />
@@ -97,7 +105,9 @@ function InnerApp() {
                 path="/book/:id"
                 element={
                   <ProtectedRoute>
-                    <BookingPage />
+                    <RequireSubscription requiredFor="booking">
+                      <BookingPage />
+                    </RequireSubscription>
                   </ProtectedRoute>
                 }
               />

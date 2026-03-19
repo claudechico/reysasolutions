@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { subscriptionsApi, paymentsApi } from '../lib/api';
+import { subscriptionsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { formatPrice } from '../lib/format';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, CreditCard } from 'lucide-react';
@@ -18,11 +19,14 @@ export default function Subscriptions() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { subscription, loading: subscriptionLoading, refetch: refetchSubscription } = useSubscription();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
-  const [isPaid, setIsPaid] = useState<boolean | null>(null);
-  const [checkingPayment, setCheckingPayment] = useState(true);
+
+  const isPaid = subscription?.hasActiveSubscription ?? false;
+  const daysRemaining = subscription?.daysRemaining ?? null;
+  const checkingPayment = subscriptionLoading;
   
   // Determine subscription price based on user role
   // Get user role - handle both direct role property and nested user object
@@ -34,17 +38,17 @@ export default function Subscriptions() {
   
   const userRole = getUserRole();
   
-  // Determine price: 2000 for 'users' role, 10000 for 'owner' or 'agent' roles
+  // Determine price: 5000 for 'users' role, 10000 for 'owner' or 'agent' roles
   const subscriptionPrice = 
     userRole === 'users' 
-      ? 2000 
+      ? 5000 
       : (userRole === 'owner' || userRole === 'agent' 
           ? 10000 
           : 0);
   
-  // Debug logging to verify role detection
+  // Debug logging to verify role detection (dev only)
   useEffect(() => {
-    if (user) {
+    if (import.meta.env.DEV && user) {
       console.log('Subscription Page - User Role Detection:', {
         user,
         role: userRole,
@@ -54,30 +58,34 @@ export default function Subscriptions() {
     }
   }, [user, userRole, subscriptionPrice]);
 
+  // Refetch subscription when this page is shown so status is always fresh (e.g. after payment)
+  useEffect(() => {
+    refetchSubscription();
+  }, [refetchSubscription]);
+
+  useEffect(() => {
+    const onVisible = () => refetchSubscription();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refetchSubscription]);
+
   useEffect(() => {
     (async () => {
       try {
         const res = await subscriptionsApi.list();
         setSubscriptions(res.subscriptions || []);
       } catch (e: unknown) {
-        setMessage((e as { message?: string })?.message || t('subscriptions.loadError'));
+        const error = e as any;
+        const errorMessage = error?.message || t('subscriptions.loadError');
+        if (error?.status !== 404 &&
+            !errorMessage?.toLowerCase().includes('route') &&
+            !errorMessage?.toLowerCase().includes('not found') &&
+            !errorMessage?.toLowerCase().includes('404')) {
+          setMessage(errorMessage);
+        }
+        setSubscriptions([]);
       } finally {
         setLoading(false);
-      }
-    })();
-    
-    // Check payment status
-    (async () => {
-      try {
-        setCheckingPayment(true);
-        const res = await paymentsApi.checkSubscription();
-        const paid = res?.isPaid || (user as any).isPaidUser || false;
-        setIsPaid(paid);
-      } catch (err) {
-        // If check fails, use user's isPaidUser field as fallback
-        setIsPaid((user as any).isPaidUser || false);
-      } finally {
-        setCheckingPayment(false);
       }
     })();
   }, [user, t]);
@@ -123,13 +131,17 @@ export default function Subscriptions() {
                   <h3 className={`text-xl font-bold mb-1 ${
                     isPaid ? 'text-green-900' : 'text-orange-900'
                   }`}>
-                    Payment Status: {isPaid ? 'Paid' : 'Not Paid'}
+                    Payment Status: {isPaid 
+                      ? (daysRemaining != null ? `${daysRemaining} days remaining` : 'Paid')
+                      : 'Not Paid'}
                   </h3>
                   <p className={`text-sm ${
                     isPaid ? 'text-green-800' : 'text-orange-800'
                   }`}>
                     {isPaid 
-                      ? 'Your subscription is active. You can create properties, make bookings, and contact agents.'
+                      ? (daysRemaining != null 
+                          ? `Your subscription is active. ${daysRemaining} days remaining. You can create properties, make bookings, and contact agents.`
+                          : 'Your subscription is active. You can create properties, make bookings, and contact agents.')
                       : 'You need to make a payment to access premium features. Please subscribe to continue.'}
                   </p>
                 </div>
@@ -160,6 +172,11 @@ export default function Subscriptions() {
                     ? t('subscriptions.customerDescription')
                     : t('subscriptions.ownerAgentDescription')}
                 </p>
+                {userRole === 'users' && (
+                  <p className="text-sm text-dark-blue-600 mt-1">
+                    {t('subscriptions.customerBenefits')}
+                  </p>
+                )}
                 <p className="text-sm text-gray-500">
                   {t('subscriptions.price')}: <span className="font-bold text-dark-blue-600 text-lg">Tsh {formatPrice(subscriptionPrice)}</span>
                 </p>
@@ -179,12 +196,21 @@ export default function Subscriptions() {
             <div className="text-center py-12">{t('subscriptions.loading')}</div>
           ) : (
             <div className="space-y-4">
-              {subscriptions.length === 0 ? (
+              {isPaid && subscriptions.length === 0 ? (
+                <div className="text-center py-12 text-gray-600">
+                  <p className="mb-4 font-medium text-green-700">
+                    Your subscription is active{daysRemaining != null ? ` — ${daysRemaining} days remaining` : ''}.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    You can create properties, make bookings, and contact agents. Renew from the Payments page when your plan is near expiry.
+                  </p>
+                </div>
+              ) : subscriptions.length === 0 ? (
                 <div className="text-center py-12 text-gray-600">
                   <p className="mb-4">{t('subscriptions.noActiveSubscriptions')}</p>
                   {user && subscriptionPrice > 0 && (
                     <p className="text-sm text-gray-500">
-                      {t('subscriptions.visitPayments', { price: `Tsh ${formatPrice(subscriptionPrice)}` })}
+                      Visit the Payments page to purchase a subscription plan for Tsh {formatPrice(subscriptionPrice)}.
                     </p>
                   )}
                 </div>
@@ -210,7 +236,9 @@ export default function Subscriptions() {
             </div>
           )}
 
-          {message && <div className="mt-4 text-sm text-gray-700">{message}</div>}
+          {message && !message.toLowerCase().includes('route') && !message.toLowerCase().includes('not found') && !message.toLowerCase().includes('404') && (
+            <div className="mt-4 text-sm text-gray-700">{message}</div>
+          )}
         </div>
       </div>
     </div>

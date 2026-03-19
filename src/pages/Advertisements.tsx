@@ -306,7 +306,12 @@ export default function Advertisements() {
                               }
                               try {
                                 const res = await (await import('../lib/api')).paymentsApi.checkSubscription();
-                                const isPaid = res?.isPaid || (user as any).isPaidUser || false;
+                                // Handle both new response structure (data.subscription) and legacy (isPaid)
+                                const isPaid = res?.data?.subscription?.hasActiveSubscription || 
+                                               res?.data?.subscription?.isPaidUser || 
+                                               res?.isPaid || 
+                                               (user as any).isPaidUser || 
+                                               false;
                                 if (!isPaid) {
                                   alert(t('subscriptions.subscribeToCall'));
                                   navigate('/subscriptions');

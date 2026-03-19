@@ -220,32 +220,14 @@ export default function Dashboard() {
   };
 
   // Get property status for display
+  // All properties are now auto-approved, so always show as approved
   const getPropertyStatus = (property: any) => {
-    const isApproved = isPropertyApproved(property);
-    // Get moderationStatus or fallback to status
-    const moderationStatus = property.moderationStatus || property.status || (isApproved ? 'approved' : 'pending');
-    const statusText = String(moderationStatus).toLowerCase();
-    const isRejected = statusText === 'rejected' || statusText === 'declined';
-    
-    if (isApproved || statusText === 'approved') {
-      return {
-        text: t('dashboard.approved'),
-        class: 'bg-green-100 text-green-800',
-        icon: <CheckCircle className="w-3 h-3 mr-1" />
-      };
-    } else if (isRejected) {
-      return {
-        text: t('dashboard.rejected'),
-        class: 'bg-red-100 text-red-800',
-        icon: <XCircle className="w-3 h-3 mr-1" />
-      };
-    } else {
-      return {
-        text: t('dashboard.waitingForApproval'),
-        class: 'bg-yellow-100 text-yellow-800',
-        icon: <Clock className="w-3 h-3 mr-1" />
-      };
-    }
+    // Properties are auto-approved, so always return approved status
+    return {
+      text: t('dashboard.approved') || 'Approved',
+      class: 'bg-green-100 text-green-800',
+      icon: <CheckCircle className="w-3 h-3 mr-1" />
+    };
   };
 
 

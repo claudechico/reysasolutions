@@ -5,6 +5,7 @@ import { adminUsersApi } from '../lib/api';
 import { useTranslation } from 'react-i18next';
 import { Search, X, Trash2, UserPlus, Users, Mail, Phone, Calendar, Download, User } from 'lucide-react';
 import { format } from 'date-fns';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
 export default function AdminManageUsers() {
   const [users, setUsers] = useState<any[]>([]);
@@ -58,7 +59,7 @@ export default function AdminManageUsers() {
       loadUsers(page);
     } catch (e) {
       console.error('Delete failed', e);
-      alert('Failed to delete user');
+      alert(getFriendlyErrorMessage(e, 'Failed to delete user. Please try again.'));
     }
   };
 
@@ -76,7 +77,7 @@ export default function AdminManageUsers() {
       loadUsers(1);
     } catch (err: any) {
       console.error('Create user failed', err);
-      alert(err?.message || 'Failed to create user');
+      alert(getFriendlyErrorMessage(err, 'Failed to create user. Please check your input and try again.'));
     } finally {
       setLoading(false);
     }
@@ -298,8 +299,8 @@ export default function AdminManageUsers() {
           {/* Users - Desktop Table View */}
           <div className="hidden md:block bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <table className="table-professional w-full">
+                <thead>
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">User</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
@@ -309,7 +310,7 @@ export default function AdminManageUsers() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {users.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center">
@@ -319,7 +320,7 @@ export default function AdminManageUsers() {
                     </tr>
                   ) : (
                     users.map(u => (
-                      <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={u.id} className="hover:bg-gray-50/50 transition-colors duration-150">
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-light-blue-500 to-dark-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0">

@@ -275,7 +275,9 @@ export default function AdminDashboard() {
         propertiesApi.list({ page: 1, limit: 1000 }), // Increased limit to ensure we get all properties
       ]);
       
-      console.log('[AdminDashboard] API response properties count:', (propsRes as any)?.properties?.length || 0);
+      if (import.meta.env.DEV) {
+        console.log('[AdminDashboard] API response properties count:', (propsRes as any)?.properties?.length || 0);
+      }
 
       if (!profileRes || String((profileRes as any).role || '').toLowerCase() !== 'admin') {
         navigate('/dashboard');
@@ -288,7 +290,9 @@ export default function AdminDashboard() {
         ? ((propsRes as any).properties as any[])
         : [];
 
-      console.log('[AdminDashboard] Total properties fetched from API:', allProperties.length);
+      if (import.meta.env.DEV) {
+        console.log('[AdminDashboard] Total properties fetched from API:', allProperties.length);
+      }
 
       const orderedProperties = allProperties
         .slice()
@@ -320,28 +324,20 @@ export default function AdminDashboard() {
                item.status === 'approved';
       };
       
-      // Count only approved properties for the stat card
-      const approvedProperties = orderedProperties.filter((item: any) => isApprovedCheck(item));
-      console.log('[AdminDashboard] Approved properties count:', approvedProperties.length);
-      console.log('[AdminDashboard] Approved properties details:', approvedProperties.map(p => ({
-        id: p.id,
-        title: p.title,
-        moderationStatus: p.moderationStatus,
-        is_approved: p.is_approved,
-        status: p.status
-      })));
+      // All properties are now auto-approved, so use all properties
+      // No need to filter by approval status anymore
+      const approvedProperties = orderedProperties; // All properties are approved
+      if (import.meta.env.DEV) {
+        console.log('[AdminDashboard] Total properties (all auto-approved):', approvedProperties.length);
+      }
       
-      setPendingProperties(orderedProperties.filter((item: any) => !isApprovedCheck(item)));
-      // Show only approved properties in recent properties section
+      // No pending properties - all are auto-approved
+      setPendingProperties([]);
+      // Show recent properties (all are approved)
       const recentApprovedProperties = approvedProperties.slice(0, 5);
-      console.log('[AdminDashboard] Recent approved properties to display:', recentApprovedProperties.length);
-      console.log('[AdminDashboard] Recent properties owner data:', recentApprovedProperties.map(p => ({
-        id: p.id,
-        title: p.title,
-        owner: p.owner,
-        profiles: p.profiles,
-        agentId: p.agentId
-      })));
+      if (import.meta.env.DEV) {
+        console.log('[AdminDashboard] Recent approved properties to display:', recentApprovedProperties.length);
+      }
       setRecentProperties(recentApprovedProperties);
       
       let totalsPayload = {
@@ -368,17 +364,20 @@ export default function AdminDashboard() {
         adminUsersApi.list({ page: 1, limit: 10000 }).catch(() => null),
       ]);
 
-      // Calculate revenue and group by month
+      // Revenue only from SUCCESS payments (subscription payments)
       const payments = paymentsRes?.payments || [];
-      totalsPayload.revenue = payments.reduce(
+      const successPayments = payments.filter(
+        (p: any) => (String(p.status || '').toUpperCase() === 'SUCCESS')
+      );
+      totalsPayload.revenue = successPayments.reduce(
         (sum: number, payment: any) => sum + (Number(payment.amount) || 0),
         0
       );
 
-      // Group revenue by month
+      // Group revenue by month (success only)
       const revenueByMonthMap = new Map<string, number>();
-      payments.forEach((payment: any) => {
-        const date = payment.created_at || payment.createdAt || payment.date;
+      successPayments.forEach((payment: any) => {
+        const date = payment.completedAt || payment.completed_at || payment.createdAt || payment.created_at || payment.date;
         if (date) {
           const monthKey = format(new Date(date), 'yyyy-MM');
           const current = revenueByMonthMap.get(monthKey) || 0;
@@ -490,7 +489,9 @@ export default function AdminDashboard() {
       }));
       setLastRefresh(new Date().toISOString());
     } catch (error) {
-      console.error('Failed to load admin dashboard data', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to load admin dashboard data', error);
+      }
       navigate('/dashboard');
     } finally {
       if (withSpinner) {
@@ -533,14 +534,16 @@ export default function AdminDashboard() {
         response = await adminListingsApi.decline(propertyId as any);
       }
 
-      // Log response for debugging
-      console.log(`${approve ? 'Approve' : 'Decline'} response:`, response);
-
       // Update local state with the property object from response if available
       const responseAny = response as any;
+      if (import.meta.env.DEV) {
+        console.log(`${approve ? 'Approve' : 'Decline'} response:`, response);
+      }
       if (responseAny?.property) {
         const updatedProperty = responseAny.property;
-        console.log('Updated property from response:', updatedProperty);
+        if (import.meta.env.DEV) {
+          console.log('Updated property from response:', updatedProperty);
+        }
         
         // Update pending properties - remove if approved, update if declined
         setPendingProperties((prev) => {
@@ -576,7 +579,9 @@ export default function AdminDashboard() {
         await loadData(false);
       }
     } catch (err: any) {
-      console.error('Approval update failed', err);
+      if (import.meta.env.DEV) {
+        console.error('Approval update failed', err);
+      }
       alert('Failed to update listing approval: ' + (err?.message || 'Unknown error'));
       // Reload on error to get fresh data
       await loadData(false);
@@ -646,7 +651,7 @@ export default function AdminDashboard() {
         gradient: 'from-indigo-500 to-dark-blue-600',
         icon: DollarSign,
         delta: statTrends.revenue,
-        formatter: (v: number) => `$${formatPrice(v)}`,
+        formatter: (v: number) => `TZS ${formatPrice(v)}`,
       },
     ],
     [totals, statTrends]
@@ -664,7 +669,7 @@ export default function AdminDashboard() {
   const tooltipFormatter = (value: any, name: string, props: any) => {
     const numeric = Number(value || 0);
     if (name === 'Revenue (K)') {
-      return [`$${formatPrice(Number(props?.payload?.revenue ?? 0))}`, 'Revenue'];
+      return [`TZS ${formatPrice(Number(props?.payload?.revenue ?? 0))}`, 'Revenue'];
     }
     return [`${Math.round(numeric)}`, name];
   };
@@ -691,7 +696,6 @@ export default function AdminDashboard() {
   }
 
   const lastRefreshLabel = lastRefresh ? formatDateSafe(lastRefresh, true) : 'Not synced yet';
-  const pendingCount = pendingProperties.length;
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-light-blue-50 via-white to-light-blue-50">
@@ -756,12 +760,12 @@ export default function AdminDashboard() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span>Pending approvals</span>
-                <span className="font-semibold">{pendingCount}</span>
+                <span>Auto-approved</span>
+                <span className="font-semibold text-emerald-500">✓ Enabled</span>
               </div>
               <div className="flex items-center justify-between text-xs sm:text-sm text-white/90">
                 <span>Revenue YTD</span>
-                <span className="text-xs sm:text-sm">Tsh {formatPrice(totals.revenue)}</span>
+                <span className="text-xs sm:text-sm">TZS {formatPrice(totals.revenue)}</span>
               </div>
               <div className="flex items-center justify-between text-xs sm:text-sm text-white/90">
                 <span>Bookings</span>
@@ -781,16 +785,17 @@ export default function AdminDashboard() {
             return (
               <div
                 key={card.id}
-                className={`relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-br ${card.gradient} p-4 sm:p-6 text-white shadow-xl transition hover:shadow-2xl`}
+                className={`relative overflow-hidden rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-br ${card.gradient} p-5 sm:p-6 text-white shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1`}
               >
-                <div className="mb-4 sm:mb-5 flex items-center justify-between">
-                  <div className="rounded-lg sm:rounded-xl bg-white/20 p-2 sm:p-3 backdrop-blur-sm">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                <div className="mb-4 sm:mb-5 flex items-center justify-between relative z-10">
+                  <div className="rounded-lg sm:rounded-xl bg-white/20 p-2.5 sm:p-3 backdrop-blur-sm shadow-lg">
                     <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
                   </div>
-                  <div className="flex flex-col items-end text-xs font-semibold text-white/80">
+                  <div className="flex flex-col items-end text-xs font-semibold text-white/90">
                     <span className="flex items-center gap-1">
                       <ArrowUpRight
-                        className={`h-3 w-3 sm:h-4 sm:w-4 ${positive ? '' : 'rotate-180 opacity-90'}`}
+                        className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${positive ? '' : 'rotate-180 opacity-90'}`}
                       />
                       {Math.abs(card.delta)}%
                     </span>
@@ -871,32 +876,14 @@ export default function AdminDashboard() {
             {recentProperties.length ? (
               <div className="space-y-4">
                 {recentProperties.map((property) => {
-                  // Check moderationStatus first, then fallback to other fields
-                  const rawStatus =
-                    property?.moderationStatus ?? 
-                    property?.is_approved ?? 
-                    property?.approved ?? 
-                    property?.status ?? 
-                    'pending';
-                  const normalizedStatus = (() => {
-                    const str = String(rawStatus).toLowerCase();
-                    if (str === 'true' || str === 'approved' || str === '1') return 'approved';
-                    if (str === 'rejected' || str === 'declined') return 'rejected';
-                    return 'pending';
-                  })();
-                  const isPending = normalizedStatus === 'pending';
-                  const statusClasses =
-                    normalizedStatus === 'approved'
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : normalizedStatus === 'rejected'
-                      ? 'bg-rose-50 text-rose-600'
-                      : 'bg-amber-50 text-amber-700';
+                  // All properties are auto-approved, so always show as approved
+                  const normalizedStatus = 'approved'; // Properties are auto-approved
+                  const statusClasses = 'bg-emerald-50 text-emerald-600'; // Always approved
                   const ownerName =
                     (property?.agent && typeof property.agent === 'object' ? (property.agent.name || property.agent.full_name) : property?.agent) ||
                     (property?.profiles?.full_name) || 
                     (property.owner && typeof property.owner === 'object' ? (property.owner.name || property.owner.full_name) : property.owner) || 
                     'N/A';
-                  const processing = Boolean(actionLoading[property.id]);
 
                   return (
                     <div
@@ -972,34 +959,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {isPending && (
-                          <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-                            <button
-                              disabled={processing}
-                              onClick={() => handleApproval(property.id, true)}
-                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs sm:text-sm font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {processing ? (
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                              ) : (
-                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                              )}
-                              {processing ? 'Processing…' : 'Approve'}
-                            </button>
-                            <button
-                              disabled={processing}
-                              onClick={() => handleApproval(property.id, false)}
-                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs sm:text-sm font-medium text-rose-600 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {processing ? (
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                              ) : (
-                                <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                              )}
-                              {processing ? 'Processing…' : 'Reject'}
-                            </button>
-                          </div>
-                        )}
+                        {/* Approval buttons removed - properties are auto-approved */}
                       </div>
                     </div>
                   );
@@ -1015,18 +975,16 @@ export default function AdminDashboard() {
           <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white p-4 sm:p-6 shadow-xl">
             <div className="mb-4 sm:mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Pending approvals</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Recent properties</h2>
                 <p className="text-xs sm:text-sm text-gray-500">
-                  {pendingCount > 0
-                    ? `${pendingCount} listing${pendingCount > 1 ? 's are' : ' is'} waiting for your review.`
-                    : 'All caught up — nothing to approve right now.'}
+                  All properties are automatically approved and displayed immediately upon creation.
                 </p>
               </div>
             </div>
 
-            {pendingCount ? (
+            {recentProperties.length > 0 ? (
               <div className="space-y-4 sm:space-y-6">
-                {pendingProperties.map((property) => {
+                {recentProperties.map((property) => {
                   const processing = Boolean(actionLoading[property.id]);
                   const ownerName =
                     (property?.agent && typeof property.agent === 'object' ? (property.agent.name || property.agent.full_name) : property?.agent) ||
@@ -1034,29 +992,10 @@ export default function AdminDashboard() {
                     (property.owner && typeof property.owner === 'object' ? (property.owner.name || property.owner.full_name) : property.owner) || 
                     'N/A';
                   
-                  // Check if property is approved using helper function
-                  const isApproved = isPropertyApproved(property);
-                  // Check moderationStatus first, then fallback to status
-                  const rawStatus = property?.moderationStatus || property?.status || (isApproved ? 'approved' : 'pending');
-                  const normalizedStatus = (() => {
-                    const str = String(rawStatus).toLowerCase();
-                    if (str === 'true' || str === 'approved' || str === '1' || isApproved) return 'approved';
-                    if (str === 'rejected' || str === 'declined') return 'rejected';
-                    return 'pending';
-                  })();
-                  
-                  const statusClasses =
-                    normalizedStatus === 'approved'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : normalizedStatus === 'rejected'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-amber-100 text-amber-700';
-                  const statusText =
-                    normalizedStatus === 'approved'
-                      ? 'Approved'
-                      : normalizedStatus === 'rejected'
-                      ? 'Rejected'
-                      : 'Pending review';
+                  // All properties are auto-approved
+                  const normalizedStatus = 'approved';
+                  const statusClasses = 'bg-emerald-100 text-emerald-700';
+                  const statusText = 'Approved';
 
                   return (
                     <div
@@ -1142,34 +1081,7 @@ export default function AdminDashboard() {
                           <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                           <span>Preview listing</span>
                         </button>
-                        {normalizedStatus === 'pending' && (
-                          <>
-                            <button
-                              disabled={processing}
-                              onClick={() => handleApproval(property.id, true)}
-                              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {processing ? (
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                              ) : (
-                                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                              )}
-                              {processing ? 'Processing…' : 'Approve'}
-                            </button>
-                            <button
-                              disabled={processing}
-                              onClick={() => handleApproval(property.id, false)}
-                              className="w-full lg:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {processing ? (
-                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                              ) : (
-                                <XCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                              )}
-                              {processing ? 'Processing…' : 'Reject'}
-                            </button>
-                          </>
-                        )}
+                        {/* Approval buttons removed - properties are auto-approved */}
                       </div>
                     </div>
                   );
@@ -1177,7 +1089,7 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="rounded-xl sm:rounded-2xl border border-dashed border-gray-300 p-8 sm:p-10 text-center text-xs sm:text-sm text-gray-500">
-                Fantastic! There are no pending approvals right now.
+                No properties created yet. Properties will appear here once users start creating listings.
               </div>
             )}
           </div>

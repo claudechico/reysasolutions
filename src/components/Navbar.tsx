@@ -98,7 +98,7 @@ export default function Navbar() {
       </div>
 
       {/* Main navigation */}
-      <nav className={`w-full bg-white border-b border-gray-200 shadow-sm ${isAdmin ? 'mt-4 md:mt-6' : ''}`}>
+      <nav className={`w-full bg-white/95 backdrop-blur-sm border-b border-gray-200/80 shadow-sm ${isAdmin ? 'mt-4 md:mt-6' : ''}`}>
         <div className="w-full">
           <div className="flex justify-between items-center h-16 sm:h-16 md:h-20 pl-2 pr-2 sm:pl-3 sm:pr-4 lg:pl-4 lg:pr-6">
             <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-opacity flex-shrink-0 px-3 py-1 bg-white">
@@ -124,75 +124,82 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-1 pr-4 sm:pr-6 lg:pr-8">
               <Link 
                 to={role === 'admin' ? '/?skipAdminRedirect=1' : '/'} 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.home')}
+                {isActive('/') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               <Link 
                 to="/properties" 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/properties') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.properties')}
+                {isActive('/properties') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               <Link 
                 to="/about" 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/about') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.about')}
+                {isActive('/about') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               <Link 
                 to="/contact" 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/contact') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.contact')}
+                {isActive('/contact') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               <Link 
                 to="/advertisements" 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/advertisements') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.advertisements')}
+                {isActive('/advertisements') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               <Link 
                 to="/auctions" 
-                className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                   isActive('/auctions') 
-                    ? 'text-dark-blue-600 bg-light-blue-50' 
-                    : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                    ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                    : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                 }`}
               >
                 {t('nav.auctions')}
+                {isActive('/auctions') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
               {/* Show Subscriptions link only to non-admin users */}
               {role !== 'admin' && (
                 <Link 
                   to="/subscriptions" 
-                  className={`px-3 py-2 rounded-lg transition-all font-medium text-sm ${
+                  className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
                     isActive('/subscriptions') 
-                      ? 'text-dark-blue-600 bg-light-blue-50' 
-                      : 'text-gray-700 hover:text-dark-blue-500 hover:bg-gray-50'
+                      ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
+                      : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
                   }`}
                 >
                   {t('nav.subscriptions')}
+                  {isActive('/subscriptions') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
                 </Link>
               )}
             </div>
@@ -241,7 +248,7 @@ export default function Navbar() {
                   <div className="h-6 w-px bg-gray-300 mx-1"></div>
                   <button 
                     onClick={handleSignOut} 
-                    className="flex items-center space-x-2 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-2 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all shadow-md hover:shadow-lg font-medium text-sm"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all shadow-md hover:shadow-lg font-medium text-sm hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>{t('nav.signOut')}</span>
@@ -250,7 +257,7 @@ export default function Navbar() {
               ) : (
                 <>
                   <Link to="/login" className="text-gray-700 hover:text-dark-blue-500 transition font-medium px-3 py-2 rounded-lg hover:bg-gray-50">{t('nav.login')}</Link>
-                  <Link to="/register" className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 font-medium">{t('nav.getStarted')}</Link>
+                  <Link to="/register" className="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-2.5 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition shadow-lg shadow-dark-blue-500/30 hover:shadow-xl hover:shadow-dark-blue-500/40 font-medium hover:scale-[1.02] active:scale-[0.98]">{t('nav.getStarted')}</Link>
                 </>
               )}
             </div>

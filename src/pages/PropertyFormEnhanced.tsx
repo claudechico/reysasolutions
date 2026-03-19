@@ -5,6 +5,7 @@ import { propertiesApi, propertiesApiExtended, paymentsApi } from '../lib/api';
 import { categoriesApi } from '../lib/api';
 import { Save, ArrowLeft, X, Plus, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
 const AMENITIES_OPTIONS = [
   'wifi', 'air_conditioning', 'heating', 'parking', 'pool', 'gym', 'garden',
@@ -68,7 +69,12 @@ export default function PropertyFormEnhanced() {
       try {
         setCheckingPayment(true);
         const res = await paymentsApi.checkSubscription();
-        const paid = res?.isPaid || (user as any).isPaidUser || false;
+        // Handle both new response structure (data.subscription) and legacy (isPaid)
+        const paid = res?.data?.subscription?.hasActiveSubscription || 
+                     res?.data?.subscription?.isPaidUser || 
+                     res?.isPaid || 
+                     (user as any).isPaidUser || 
+                     false;
         setIsPaid(paid);
         if (!paid && id === 'new') {
           setError('You need to make a payment before creating properties. Please subscribe to continue.');
@@ -264,14 +270,14 @@ export default function PropertyFormEnhanced() {
           console.log('[PropertyForm] POST /properties/:id/media response', uploadRes);
         } catch (uploadErr: any) {
           console.error('Media upload error:', uploadErr);
-          setError(uploadErr?.message || 'Property saved but media upload failed. Please try uploading media again.');
+          setError(getFriendlyErrorMessage(uploadErr, 'Property saved but media upload failed. Please try uploading media again.'));
           setLoading(false);
           return;
         }
       }
     } catch (err: any) {
       console.error('[PropertyForm] Save failed', err);
-      setError(err?.message || 'Save failed');
+      setError(getFriendlyErrorMessage(err, 'Failed to save property. Please check your input and try again.'));
       setLoading(false);
       return;
     }

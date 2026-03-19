@@ -87,23 +87,23 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
         <div
-          className={`fixed left-0 w-72 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-2xl z-40 flex flex-col transition-transform duration-300 ${
+          className={`fixed left-0 w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white shadow-2xl z-40 flex flex-col transition-transform duration-300 border-r border-gray-700/50 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } lg:translate-x-0 lg:fixed`}
           style={{ top: 'var(--app-nav-height)', height: 'calc(100% - var(--app-nav-height))' }}
         >
       {/* User Info */}
-      <div className="px-2 py-2 border-b border-gray-700 bg-gradient-to-br from-gray-800 to-gray-900">
-        <div className="flex items-start gap-1.5">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-lg flex-shrink-0 mt-0.5">
+      <div className="px-4 py-4 border-b border-gray-700/50 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-light-blue-500 to-dark-blue-600 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-lg flex-shrink-0 ring-2 ring-white/20">
             {(user as any)?.name?.charAt(0)?.toUpperCase() || (user as any)?.email?.charAt(0)?.toUpperCase() || 'A'}
           </div>
 
-          <div className="ml-2 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-white truncate">
               {(user as any)?.name || (user as any)?.email}
             </div>
-            <div className="text-xs text-gray-300 truncate">
+            <div className="text-xs text-gray-400 truncate">
               {(user as any)?.email}
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function AdminSidebar() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -120,30 +120,31 @@ export default function AdminSidebar() {
               key={item.path}
               to={item.path}
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                 active
-                  ? 'bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white shadow-lg'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white shadow-lg shadow-dark-blue-500/30'
+                  : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
               }`}
             >
-              <Icon className={`w-5 h-5 ${active ? 'text-white' : 'text-gray-400'}`} />
-              <span className="font-medium">{item.label}</span>
+              <Icon className={`w-5 h-5 transition-transform duration-200 ${active ? 'text-white' : 'text-gray-400 group-hover:text-white group-hover:scale-110'}`} />
+              <span className="font-medium text-sm">{item.label}</span>
+              {active && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>}
             </Link>
           );
         })}
       </nav>
 
       {/* Sign Out Button */}
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-700/50 bg-gray-900/50">
         <button
           onClick={() => {
             setMobileMenuOpen(false);
             handleSignOut();
           }}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-all"
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gradient-to-r hover:from-red-600 hover:to-red-700 hover:text-white transition-all duration-200 hover:shadow-lg hover:shadow-red-600/30 font-medium text-sm group"
         >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">{t('nav.signOut')}</span>
+          <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+          <span>{t('nav.signOut')}</span>
         </button>
       </div>
     </div>

@@ -9,7 +9,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -19,8 +19,8 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError(''); setSuccess(''); setLoading(true);
     try {
-      await usersApi.forgotPassword(email);
-      setSuccess('OTP code sent. Please check your email.');
+      await usersApi.forgotPassword(phoneNumber);
+      setSuccess('OTP code sent. Please check your mobile phone.');
       setStep(2);
     } catch (e: any) {
       setError(e?.message || 'Failed to send reset code');
@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError(''); setSuccess(''); setLoading(true);
     try {
-  const res: any = await usersApi.verifyResetOTP(email, otp);
+  const res: any = await usersApi.verifyResetOTP(phoneNumber, otp);
   if (res && res.resetToken) setResetToken(res.resetToken);
       setSuccess('OTP verified. Please enter your new password.');
       setStep(3);
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
     setError(''); setSuccess(''); setLoading(true);
     try {
       await usersApi.resetPassword(
-        { email, otp, newPassword, confirmPassword } as any,
+        { newPassword, confirmPassword },
         resetToken || undefined
       );
       setSuccess('Password has been reset! Redirecting to login...');
@@ -65,13 +65,15 @@ export default function ForgotPassword() {
         {step === 1 && (
           <form onSubmit={handleRequest} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                pattern="^0[67][0-9]{8}$"
+                value={phoneNumber}
+                onChange={e => setPhoneNumber(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-light-blue-500 outline-none"
+                placeholder="07xxxxxxxx"
               />
             </div>
             <button

@@ -2,14 +2,25 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { paymentsApi, bookingsApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { CreditCard, Smartphone, DollarSign, CheckCircle, Clock, XCircle, Wallet, History, AlertCircle } from 'lucide-react';
 import { formatPrice } from '../lib/format';
 import { format } from 'date-fns';
 
 export default function Payment() {
   const { user } = useAuth();
-  const [provider, setProvider] = useState('mpesa');
-  const [amount, setAmount] = useState('1000');
+  const { refetch: refetchSubscription } = useSubscription();
+
+  // Determine default amount based on user role: 5000 for 'users', 10000 for 'owner' or 'agent'
+  const getUserRole = () => {
+    if (!user) return '';
+    const role = (user as { role?: string })?.role || '';
+    return String(role).toLowerCase().trim();
+  };
+  const userRole = getUserRole();
+  // Subscription amount is fixed by role: 5000 (customer), 10000 (agent/owner). Never editable.
+  const subscriptionAmount = userRole === 'users' ? 5000 : (userRole === 'owner' || userRole === 'agent' ? 10000 : 5000);
+  
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -24,14 +35,7 @@ export default function Payment() {
       setPhone((user as any).phoneNumber);
     }
   }, [user, phone]);
-
-  const providers = [
-    { id: 'mpesa', label: 'M-Pesa' },
-    { id: 'tigopesa', label: 'Tigo Pesa' },
-    { id: 'airtelmoney', label: 'Airtel Money' },
-    { id: 'mixbyaxx', label: 'Mixby Axx' },
-    { id: 'halopesa', label: 'HaloPesa' },
-  ];
+  
 
   const handlePay = async () => {
     setMessage(null);
@@ -53,7 +57,7 @@ export default function Payment() {
       }
       
       const res: any = await paymentsApi.createOrder({ 
-        amount: Number(amount), 
+        amount: subscriptionAmount, 
         buyer_phone: phoneToUse,
         msisdn: formattedPhone || undefined,
       });
@@ -63,16 +67,15 @@ export default function Payment() {
       const orderId = orderData?.order_id || orderData?.orderId || res?.order_id;
       
       if (orderId) {
-        setMessage(res?.message || 'Order created successfully. Payment initiated. Follow instructions on your phone.');
+        setMessage(res?.message || 'Payment initiated. Confirm on your phone. Status will update once we receive confirmation.');
         
         // Create payment history entry
         const paymentEntry = {
           id: orderId,
           orderId: orderId,
-          amount: Number(amount),
+          amount: subscriptionAmount,
           phone: phone,
-          provider: provider,
-          status: paymentData?.status || orderData?.status || 'PENDING',
+          status: 'PROCESSING',
           createdAt: new Date().toISOString(),
         };
         
@@ -152,6 +155,9 @@ export default function Payment() {
         if (['success', 'completed', 'paid', 'failed', 'error', 'cancelled'].includes(st)) {
           clearInterval(iv);
           delete pollingRef.current[orderId];
+          if (st === 'success' || st === 'completed' || st === 'paid') {
+            refetchSubscription();
+          }
           // if payment succeeded and we have a pending booking attached, create the booking
           if ((st === 'success' || st === 'completed' || st === 'paid') && pendingBookingsRef.current[orderId]) {
             const bk = pendingBookingsRef.current[orderId];
@@ -221,37 +227,13 @@ export default function Payment() {
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Make a Payment</h1>
           </div>
-          <p className="text-gray-600 text-sm sm:text-base">Choose your mobile money provider and complete your payment securely.</p>
+          <p className="text-gray-600 text-sm sm:text-base">Enter your phone number to complete your subscription payment. Amount is fixed by your role.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Payment Form - Left Column */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8 mb-6">
-              {/* Provider Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                  <Wallet className="w-5 h-5 text-dark-blue-500" />
-                  <span>Select Payment Provider</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {providers.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setProvider(p.id)}
-                      className={`px-4 py-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
-                        provider === p.id 
-                          ? 'border-dark-blue-500 bg-light-blue-50 text-dark-blue-600 shadow-md transform scale-105' 
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Phone Number Input */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center space-x-2">
@@ -268,24 +250,18 @@ export default function Payment() {
                 <p className="mt-1 text-xs text-gray-500">Enter your mobile money registered phone number</p>
               </div>
 
-              {/* Amount Input */}
+              {/* Subscription amount: fixed by role (customer 5,000 / agent or owner 10,000), not editable */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center space-x-2">
                   <DollarSign className="w-5 h-5 text-dark-blue-500" />
-                  <span>Amount (Tsh)</span>
+                  <span>Subscription amount (Tsh)</span>
                 </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">Tsh</span>
-                  <input 
-                    value={amount} 
-                    onChange={(e) => setAmount(e.target.value)} 
-                    type="number" 
-                    className="w-full pl-16 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-transparent outline-none transition-all" 
-                    placeholder="1000"
-                    min="1"
-                  />
+                <div className="w-full pl-4 pr-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-semibold">
+                  Tsh {formatPrice(subscriptionAmount)}
+                  <span className="block text-xs font-normal text-gray-500 mt-1">
+                    {userRole === 'users' ? 'Customer plan' : (userRole === 'owner' || userRole === 'agent' ? 'Owner/Agent plan' : '')} — amount cannot be changed
+                  </span>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Minimum amount: Tsh 1,000</p>
               </div>
 
               {/* Message Display */}
@@ -303,7 +279,7 @@ export default function Payment() {
               {/* Pay Button */}
               <button 
                 onClick={handlePay} 
-                disabled={loading || !phone || !amount || Number(amount) < 1000} 
+                disabled={loading || !phone} 
                 className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-4 rounded-xl font-semibold text-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center space-x-2"
               >
                 {loading ? (
@@ -346,11 +322,6 @@ export default function Payment() {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="text-sm font-semibold text-gray-900 capitalize">
-                                {p.provider || 'N/A'}
-                              </span>
-                            </div>
                             <p className="text-lg font-bold text-gray-900">
                               Tsh {formatPrice(p.amount || 0)}
                             </p>

@@ -30,8 +30,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		headers.Authorization = `Bearer ${token}`;
 	}
 
-	// Log token status for booking endpoints (for debugging)
-	if (path.includes('/bookings')) {
+	// Log token status for booking endpoints (for debugging - dev only)
+	if (import.meta.env.DEV && path.includes('/bookings')) {
 		console.log('Booking API Request:', {
 			path,
 			hasToken: !!token,
@@ -52,14 +52,33 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 		body = await res.text().catch(() => null);
 	}
 	if (!res.ok) {
+		// Token expired or invalid: clear auth and redirect to login (works for web and mobile web)
+		if (res.status === 401) {
+			localStorage.removeItem('auth_token');
+			localStorage.removeItem('auth_user');
+			window.dispatchEvent(new CustomEvent('auth:logout'));
+			const returnTo = typeof window !== 'undefined' ? encodeURIComponent(window.location.pathname + window.location.search) : '';
+			window.location.href = `/login?expired=1${returnTo ? `&returnTo=${returnTo}` : ''}`;
+			throw new Error('Session expired. Please log in again.');
+		}
+
 		// Prefer structured error message when available
-		const message = isJson ? (body?.message || body?.error || JSON.stringify(body)) : String(body || res.statusText || 'Request failed');
+		let message = isJson ? (body?.message || body?.error || JSON.stringify(body)) : String(body || res.statusText || 'Request failed');
+		
+		// Filter out technical error messages like "Route not found" for 404s
+		if (res.status === 404) {
+			// For 404 errors, provide a more user-friendly message
+			if (typeof message === 'string' && (message.toLowerCase().includes('route') || message.toLowerCase().includes('not found'))) {
+				message = 'Resource not found';
+			}
+		}
+		
 		const err: any = new Error(String(message));
 		err.status = res.status;
 		err.body = body;
 		
-		// Log authentication errors for booking endpoints
-		if (path.includes('/bookings') && (res.status === 401 || res.status === 403)) {
+		// Log authentication errors for booking endpoints (dev only)
+		if (import.meta.env.DEV && path.includes('/bookings') && (res.status === 401 || res.status === 403)) {
 			console.error('Booking API Authentication Error:', {
 				path,
 				status: res.status,
@@ -138,11 +157,17 @@ export interface AuthResponse {
 }
 
 export const authApi = {
-	login: (email: string, password: string) =>
-		request<AuthResponse>('/users/login', {
+	login: (emailOrPhone: string, password: string) => {
+		// Determine if input is email or phone number
+		const isEmail = emailOrPhone.includes('@');
+		const body = isEmail 
+			? { email: emailOrPhone, password }
+			: { phoneNumber: emailOrPhone, password };
+		return request<AuthResponse>('/users/login', {
 			method: 'POST',
-			body: JSON.stringify({ email, password }),
-		}),
+			body: JSON.stringify(body),
+		});
+	},
 	register: (payload: {
 		name: string;
 		email: string;
@@ -301,8 +326,8 @@ export const usersApi = {
 	remove: (id: string | number) => request(`/users/${id}`, { method: 'DELETE' }),
 	updatePassword: (payload: { currentPassword: string; newPassword: string; confirmPassword: string }) =>
 		request(`/users/update-password`, { method: 'PATCH', body: JSON.stringify(payload) }),
-	forgotPassword: (email: string) => request(`/users/forgot-password`, { method: 'POST', body: JSON.stringify({ email }) }),
-	verifyResetOTP: (email: string, otp: string) => request(`/users/verify-reset-otp`, { method: 'POST', body: JSON.stringify({ email, otp }) }),
+	forgotPassword: (phoneNumber: string) => request(`/users/forgot-password`, { method: 'POST', body: JSON.stringify({ phoneNumber }) }),
+	verifyResetOTP: (phoneNumber: string, otp: string) => request(`/users/verify-reset-otp`, { method: 'POST', body: JSON.stringify({ phoneNumber, otp }) }),
 	resetPassword: (payload: { newPassword: string; confirmPassword: string }, resetToken?: string) =>
 		request(`/users/reset-password`, { method: 'POST', body: JSON.stringify(payload), headers: resetToken ? { Authorization: `Bearer ${resetToken}` } : undefined }),
 	verifyEmail: (email: string) => request(`/users/verify-email`, { method: 'POST', body: JSON.stringify({ email }) }),
@@ -412,7 +437,24 @@ export const paymentsApi: any = {
 	cancelOrder: (order_id: string) =>
 		request(`/payments/cancel-order`, { method: 'POST', body: JSON.stringify({ order_id }) }),
 	status: (paymentId: string | number) => request(`/payments/${paymentId}/status`),
-	checkSubscription: () => request<{ success: boolean; isPaid: boolean; message?: string }>(`/payments/check-subscription`),
+	checkSubscription: () => request<{ 
+		success: boolean; 
+		message?: string;
+		data?: {
+			user?: any;
+			subscription?: {
+				status?: string;
+				isPaidUser?: boolean;
+				hasActiveSubscription?: boolean;
+				lastPaymentDate?: string;
+				daysSinceLastPayment?: number;
+				daysRemaining?: number;
+				subscriptionDays?: number;
+				recentPayment?: any;
+			};
+		};
+		isPaid?: boolean; // Legacy support
+	}>(`/payments/check-subscription`),
 	// Legacy method for backward compatibility
 	initiate: (payload: { provider: string; amount: number; phone?: string }) =>
 		paymentsApi.createOrder({ amount: payload.amount, buyer_phone: payload.phone, msisdn: payload.phone }),

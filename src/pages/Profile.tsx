@@ -26,6 +26,7 @@ export default function Profile() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
   
   // Statistics
@@ -65,11 +66,19 @@ export default function Profile() {
       try {
         setCheckingPayment(true);
         const paymentRes = await paymentsApi.checkSubscription();
-        const paid = paymentRes?.isPaid || me.isPaidUser || false;
+        // Handle both new response structure (data.subscription) and legacy (isPaid)
+        const sub = paymentRes?.data?.subscription;
+        const paid = sub?.hasActiveSubscription || 
+                     sub?.isPaidUser || 
+                     paymentRes?.isPaid || 
+                     me.isPaidUser || 
+                     false;
         setIsPaid(paid);
+        setDaysRemaining(sub?.daysRemaining ?? null);
       } catch (err) {
         // If check fails, use user's isPaidUser field as fallback
         setIsPaid(me.isPaidUser || false);
+        setDaysRemaining(null);
       } finally {
         setCheckingPayment(false);
       }
@@ -313,7 +322,9 @@ export default function Profile() {
                   <div className="flex items-center space-x-2">
                     <CreditCard className="w-4 h-4" />
                     <span className={isPaid ? 'text-green-600 font-semibold' : 'text-orange-600 font-semibold'}>
-                      {isPaid ? 'Paid' : 'Not Paid'}
+                      {isPaid
+                        ? (daysRemaining != null ? `${daysRemaining} days remaining` : 'Paid')
+                        : 'Not Paid'}
                     </span>
                     {isPaid ? (
                       <CheckCircle className="w-4 h-4 text-green-600" />

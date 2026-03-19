@@ -1,28 +1,32 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn } = useAuth();
   const { t } = useTranslation();
-  const [email, setEmail] = useState('');
+  const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isExpired = searchParams.get('expired') === '1';
+  const returnTo = searchParams.get('returnTo') || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const res: any = await signIn(email, password);
-    try {
+    const res: any = await signIn(emailOrPhone, password);
+    if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.debug('[Login] signIn result:', res, 'local auth_user:', localStorage.getItem('auth_user'));
-    } catch {}
+    }
     if (res && res.error) {
       const msg = typeof res.error === 'string' ? res.error : (res.error.message || String(res.error));
       setError(msg);
@@ -31,13 +35,24 @@ export default function Login() {
     }
 
     // If user is admin, redirect to admin dashboard (case-insensitive)
-    const authUser = res?.user || JSON.parse(localStorage.getItem('auth_user') || 'null');
+    let authUser = res?.user;
+    if (!authUser) {
+      try {
+        const stored = localStorage.getItem('auth_user');
+        if (stored) {
+          authUser = JSON.parse(stored);
+        }
+      } catch (e) {
+        // Invalid JSON in storage, ignore
+      }
+    }
     const role = authUser ? String(authUser.role || '').toLowerCase() : '';
-    if (role === 'admin') {
-      setLoading(false);
+    setLoading(false);
+    if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+      navigate(returnTo, { replace: true });
+    } else if (role === 'admin') {
       navigate('/admin');
     } else {
-      setLoading(false);
       navigate('/dashboard');
     }
   };
@@ -60,6 +75,12 @@ export default function Login() {
         {/* Form Card */}
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
           <div className="p-8 sm:p-10 lg:p-12">
+            {isExpired && (
+              <div className="mb-6 bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-amber-800 text-sm font-medium">{t('auth.sessionExpired')}</p>
+              </div>
+            )}
             {error && (
               <div className="mb-6 bg-red-50 border-l-4 border-red-500 rounded-lg p-4 flex items-start space-x-3 animate-in slide-in-from-top-2">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -68,20 +89,20 @@ export default function Login() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email */}
+              {/* Email or Phone */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('auth.emailAddress')}
+                  {t('auth.emailAddress')} or {t('register.phoneNumber')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={emailOrPhone}
+                    onChange={(e) => setEmailOrPhone(e.target.value)}
                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all duration-200 bg-gray-50 hover:bg-white"
-                    placeholder={t('auth.placeholderEmail')}
+                    placeholder="you@example.com or 07xxxxxxxx"
                   />
                 </div>
               </div>

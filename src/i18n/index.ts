@@ -18,6 +18,14 @@ i18n
     fallbackLng: 'en',
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
+    returnNull: false,
+    returnEmptyString: false,
+    missingKeyHandler: (lng, ns, key) => {
+      if (import.meta.env.DEV) {
+        console.warn(`Missing translation key: ${key}`);
+      }
+      return key;
+    },
   });
 
 export default i18n;

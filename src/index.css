@@ -65,18 +65,34 @@
     @apply bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20;
   }
   
+  .card-professional {
+    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100/50 overflow-hidden;
+  }
+  
   /* Professional Button Styles */
   .btn-primary {
-    @apply bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-light-blue-500/30 hover:shadow-xl hover:shadow-light-blue-500/40 hover:scale-105 transition-all duration-200;
+    @apply bg-gradient-to-r from-light-blue-500 to-dark-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-light-blue-500/30 hover:shadow-xl hover:shadow-light-blue-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   
   .btn-secondary {
-    @apply bg-white text-dark-blue-600 px-6 py-3 rounded-xl font-semibold shadow-md border-2 border-dark-blue-200 hover:bg-dark-blue-50 hover:border-dark-blue-300 hover:scale-105 transition-all duration-200;
+    @apply bg-white text-dark-blue-600 px-6 py-3 rounded-xl font-semibold shadow-md border-2 border-dark-blue-200 hover:bg-dark-blue-50 hover:border-dark-blue-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200;
+  }
+  
+  .btn-success {
+    @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200;
   }
   
   /* Professional Input Styles */
   .input-professional {
-    @apply w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-light-blue-500 focus:ring-2 focus:ring-light-blue-500/20 transition-all duration-200 bg-white;
+    @apply w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-light-blue-500 focus:ring-2 focus:ring-light-blue-500/20 transition-all duration-200 bg-white placeholder:text-gray-400;
+  }
+  
+  .input-professional:focus {
+    @apply outline-none;
   }
   
   /* Gradient Text */
@@ -84,9 +100,29 @@
     @apply bg-gradient-to-r from-light-blue-500 to-dark-blue-700 bg-clip-text text-transparent;
   }
   
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-dark-blue-600 to-dark-blue-800 bg-clip-text text-transparent;
+  }
+  
   /* Professional Badge */
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-primary {
+    @apply bg-light-blue-100 text-dark-blue-700;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-danger {
+    @apply bg-red-100 text-red-800;
   }
   
   /* Smooth Animations */
@@ -104,11 +140,45 @@
   
   /* Hover Effects */
   .hover-lift {
-    @apply transition-transform duration-300 hover:-translate-y-2;
+    @apply transition-transform duration-300 hover:-translate-y-1;
   }
   
   .hover-glow {
-    @apply transition-shadow duration-300 hover:shadow-2xl hover:shadow-light-blue-500/20;
+    @apply transition-shadow duration-300 hover:shadow-xl hover:shadow-light-blue-500/20;
+  }
+  
+  /* Professional Table Styles */
+  .table-professional {
+    @apply w-full border-collapse;
+  }
+  
+  .table-professional thead {
+    @apply bg-gradient-to-r from-gray-50 to-gray-100;
+  }
+  
+  .table-professional th {
+    @apply px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200;
+  }
+  
+  .table-professional td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100;
+  }
+  
+  .table-professional tbody tr {
+    @apply hover:bg-gray-50 transition-colors duration-150;
+  }
+  
+  /* Professional Section Headers */
+  .section-header {
+    @apply mb-6 pb-4 border-b border-gray-200;
+  }
+  
+  .section-title {
+    @apply text-2xl font-bold text-gray-900 mb-2;
+  }
+  
+  .section-subtitle {
+    @apply text-gray-600 text-sm;
   }
 }
 

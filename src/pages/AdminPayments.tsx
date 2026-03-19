@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import AdminProtectedRoute from '../components/AdminProtectedRoute';
 import AdminSidebar from '../components/AdminSidebar';
-import { adminPaymentsApi } from '../lib/api';
-import { CreditCard, DollarSign, Calendar, CheckCircle, XCircle, Clock, Loader2, TrendingUp } from 'lucide-react';
+import { paymentsApi } from '../lib/api';
+import { CreditCard, Calendar, CheckCircle, XCircle, Clock, Loader2, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatPrice } from '../lib/format';
 
@@ -18,10 +18,10 @@ export default function AdminPayments() {
   const load = async (p = 1) => {
     setLoading(true);
     try {
-      const res: any = await adminPaymentsApi.transactions({ page: p, limit });
+      const res: any = await paymentsApi.list({ page: p, limit, status: 'SUCCESS' });
       if (res?.payments) {
         setPayments(res.payments);
-        setTotal(res.pagination?.total ?? res.total ?? res.payments.length);
+        setTotal(res.total ?? res.payments.length);
       } else {
         setPayments([]);
         setTotal(0);
@@ -76,9 +76,7 @@ export default function AdminPayments() {
     }
   };
 
-  const totalRevenue = payments
-    .filter(p => ['completed', 'success', 'paid'].includes((p.status || '').toLowerCase()))
-    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const totalRevenue = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
   const totalPages = Math.max(1, Math.ceil((total || 0) / limit));
 
@@ -117,12 +115,12 @@ export default function AdminPayments() {
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl sm:rounded-2xl shadow-xl border border-green-400 p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                  <DollarSign className="w-6 h-6 sm:w-8 sm:h-8" />
+                  <CreditCard className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 opacity-80" />
               </div>
-              <div className="text-green-100 text-xs sm:text-sm font-medium mb-1">Total Revenue</div>
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">Tsh {formatPrice(totalRevenue)}</div>
+              <div className="text-green-100 text-xs sm:text-sm font-medium mb-1">Total Revenue (success only)</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">TZS {formatPrice(totalRevenue)}</div>
             </div>
 
             <div className="bg-gradient-to-br from-light-blue-500 to-dark-blue-500 rounded-xl sm:rounded-2xl shadow-xl border border-light-blue-400 p-4 sm:p-6 text-white">
@@ -131,20 +129,18 @@ export default function AdminPayments() {
                   <CreditCard className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
               </div>
-              <div className="text-light-blue-100 text-xs sm:text-sm font-medium mb-1">Total Transactions</div>
+              <div className="text-light-blue-100 text-xs sm:text-sm font-medium mb-1">Successful Transactions</div>
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{total}</div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-xl border border-purple-400 p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                  <Clock className="w-6 h-6 sm:w-8 sm:h-8" />
+                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
               </div>
-              <div className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Pending Payments</div>
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">
-                {payments.filter(p => (p.status || '').toLowerCase() === 'pending').length}
-              </div>
+              <div className="text-purple-100 text-xs sm:text-sm font-medium mb-1">Showing</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">Success only</div>
             </div>
           </div>
 
@@ -173,16 +169,15 @@ export default function AdminPayments() {
                     payments.map(p => (
                       <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="text-xs sm:text-sm font-semibold text-gray-900">#{p.id}</div>
+                          <div className="text-xs sm:text-sm font-semibold text-gray-900">{(p.orderId || p.order_id || `#${p.id}`).toString()}</div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="flex items-center text-xs sm:text-sm font-semibold text-dark-blue-500">
-                            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
-                            <span>Tsh {formatPrice(p.amount || 0)}</span>
+                          <div className="text-xs sm:text-sm font-semibold text-dark-blue-500">
+                            TZS {formatPrice(p.amount || 0)}
                           </div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="text-xs sm:text-sm text-gray-900 capitalize">{p.provider || 'N/A'}</div>
+                          <div className="text-xs sm:text-sm text-gray-900 capitalize">{p.paymentChannel || 'Selcom'}</div>
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
                           <span className={`inline-flex items-center space-x-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(p.status)}`}>
@@ -193,7 +188,7 @@ export default function AdminPayments() {
                         <td className="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
                           <div className="flex items-center text-xs sm:text-sm text-gray-600">
                             <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-400 flex-shrink-0" />
-                            <span>{formatDate(p.created_at || p.createdAt)}</span>
+                            <span>{formatDate(p.completedAt || p.completed_at || p.createdAt || p.created_at)}</span>
                           </div>
                         </td>
                       </tr>

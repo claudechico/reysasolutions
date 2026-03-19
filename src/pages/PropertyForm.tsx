@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { propertiesApiExtended, propertiesApi } from '../lib/api';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 import { Save, ArrowLeft } from 'lucide-react';
 
 export default function PropertyForm() {
@@ -99,7 +100,7 @@ export default function PropertyForm() {
       }
     } catch (e: any) {
       console.error('Save property failed', e);
-      setError(e?.message || 'Save failed');
+      setError(getFriendlyErrorMessage(e, 'Failed to save property. Please check your input and try again.'));
       setLoading(false);
     }
   };

@@ -78,6 +78,7 @@
     "or": "au",
     "signIn": "Ingia",
     "signingIn": "Kuingia...",
+    "sessionExpired": "Kipindi chako kimeisha. Tafadhali ingia tena.",
     "loginSuccess": "Umeingia kwa mafanikio",
     "loginFailed": "Kuingia imekosea",
     "rememberMe": "Nikumbuke",
@@ -540,7 +541,8 @@
     "subtitle": "Simamia usajili wako na tazama hali ya malipo.",
     "customerSubscription": "Usajili wa Mteja",
     "ownerAgentSubscription": "Usajili wa Mmiliki/Wakala",
-    "customerDescription": "Jisajili ili kufikia vipengele vya hali ya juu kama mteja",
+    "customerDescription": "Jisajili ili kufanya maombi ya ukodhi, kupiga simu kwa mawakala, na kutuma ujumbe.",
+    "customerBenefits": "Kwa usajili hai unaweza: kufanya maombi ya ukodhi, kupiga simu kwa mawakala, na kutuma ujumbe.",
     "ownerAgentDescription": "Jisajili ili kuorodhesha na kusimamia mali zako",
     "price": "Bei",
     "perSubscription": "kwa kila usajili",
@@ -556,7 +558,9 @@
     "renew": "Onyesha Upya",
     "renewSuccess": "Usajili umeonyeshwa upya kwa mafanikio.",
     "loadError": "Imeshindwa kupakia usajili",
-    "renewError": "Imeshindwa kuonyesha upya usajili"
+    "renewError": "Imeshindwa kuonyesha upya usajili",
+    "subscribeToCall": "Unahitaji usajili hai ili kupiga simu au kutuma ujumbe. Tafadhali jisajili kwanza.",
+    "subscribeToBook": "Unahitaji usajili hai ili kufanya maombi ya ukodhi. Tafadhali jisajili kwanza."
   },
   "contact": {
     "getInTouch": "Wasiliana Nasi",

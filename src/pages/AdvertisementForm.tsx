@@ -5,6 +5,7 @@ import { advertisementsApi, propertiesApi, categoriesApi, PropertyDto, CategoryD
 import { Save, ArrowLeft, X, Plus, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AdminSidebar from '../components/AdminSidebar';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5558';
 
@@ -125,7 +126,7 @@ export default function AdvertisementForm() {
       });
       setImageUrls(images);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load advertisement');
+      setError(getFriendlyErrorMessage(err, 'Failed to load advertisement. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -223,7 +224,7 @@ export default function AdvertisementForm() {
 
       navigate(getBackPath());
     } catch (err: any) {
-      setError(err?.message || 'Failed to save advertisement');
+      setError(getFriendlyErrorMessage(err, 'Failed to save advertisement. Please check your input and try again.'));
     } finally {
       setLoading(false);
     }

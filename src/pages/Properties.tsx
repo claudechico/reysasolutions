@@ -173,26 +173,15 @@ export default function Properties() {
         console.log('[Properties] calling list', params);
         res = await propertiesApi.list(params as any);
       }
-      console.log('[Properties] API response', res);
+      if (import.meta.env.DEV) {
+        console.log('[Properties] API response', res);
+        console.log('[Properties] Debug -> params used for request:', params);
+        console.log('[Properties] Debug -> res.pagination:', res?.pagination);
+        console.log('[Properties] All properties received:', res?.properties?.length || 0);
+      }
       const allProperties = res?.properties || [];
       // Reset serverLikelyPaged when initiating a fresh load (unless appending)
       if (!append) setServerLikelyPaged(false);
-      console.log('[Properties] Debug -> params used for request:', params);
-      console.log('[Properties] Debug -> res.pagination:', res?.pagination);
-      
-      // Log each property's status-related fields for debugging
-      console.log('[Properties] All properties received:', allProperties.length);
-      allProperties.forEach((property: any, index: number) => {
-        console.log(`[Properties] Property ${index + 1}:`, {
-          id: property.id,
-          title: property.title,
-          status: property.status,
-          listing_type: property.listing_type,
-          moderationStatus: property.moderationStatus,
-          is_approved: property.is_approved,
-          fullProperty: property
-        });
-      });
       
       // Filter to show only approved properties (moderationStatus === 'approved')
       let approvedProperties = allProperties.filter((property: any) => {
@@ -309,7 +298,9 @@ export default function Properties() {
         const end = start + limit;
         // If server returned only a page, approvedProperties already contains that page; map directly
         const paginatedProperties = approvedProperties.slice(0, limit);
-        console.log('[Properties] Server returned a page. approvedProperties (after moderation) length:', approvedProperties.length, 'paginated length:', paginatedProperties.length);
+        if (import.meta.env.DEV) {
+          console.log('[Properties] Server returned a page. approvedProperties (after moderation) length:', approvedProperties.length, 'paginated length:', paginatedProperties.length);
+        }
         if (append) {
           setProperties(prev => [...prev, ...paginatedProperties]);
           setPage(prev => prev + 1);

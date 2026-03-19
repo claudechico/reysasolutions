@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminProtectedRoute from '../components/AdminProtectedRoute';
 import AdminSidebar from '../components/AdminSidebar';
-import { propertiesApi, adminUsersApi, adminPaymentsApi } from '../lib/api';
+import { propertiesApi, adminUsersApi, paymentsApi } from '../lib/api';
 import { formatPrice } from '../lib/format';
 import {
   ResponsiveContainer,
@@ -116,35 +116,43 @@ export default function AdminAnalytics() {
     const load = async () => {
       setLoading(true);
       try {
-        const analyticsResponse: any = await adminUsersApi.analytics().catch(() => null);
+        const [analyticsResponse, paymentsRes, propertiesPayload] = await Promise.all([
+          adminUsersApi.analytics().catch(() => null),
+          paymentsApi.list({ page: 1, limit: 5000 }).catch(() => null),
+          propertiesApi.list({ page: 1, limit: 100 }).catch(() => null),
+        ]);
 
-        if (analyticsResponse?.analytics) {
-          setAnalytics(analyticsResponse.analytics as AnalyticsShape);
-        } else {
-          const [propertiesRes, paymentsRes] = await Promise.all([
-            propertiesApi.list({ page: 1, limit: 2000 }).catch(() => null),
-            adminPaymentsApi.revenueByMonth().catch(() => null),
-          ]);
+        const payments = (paymentsRes?.payments || []) as any[];
+        const successPayments = payments.filter(
+          (p: any) => (String(p.status || '').toUpperCase() === 'SUCCESS')
+        );
+        const revenue = successPayments.reduce(
+          (sum: number, p: any) => sum + (Number(p.amount) || 0),
+          0
+        );
 
-          const properties = (propertiesRes?.properties || []) as any[];
-          const revenue = properties.reduce(
-            (sum: number, property: any) => sum + (Number(property.price) || 0),
-            0
-          );
+        const revenueByMonthMap = new Map<string, number>();
+        successPayments.forEach((p: any) => {
+          const date = p.completedAt || p.completed_at || p.createdAt || p.created_at;
+          if (date) {
+            const key = format(new Date(date), 'yyyy-MM');
+            revenueByMonthMap.set(key, (revenueByMonthMap.get(key) || 0) + (Number(p.amount) || 0));
+          }
+        });
+        const revenueByMonth = Array.from(revenueByMonthMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([month, amount]) => ({ month, amount }));
 
-          setAnalytics({
-            totalProperties: properties.length,
-            totalUsers: 0,
-            totalBookings: 0,
-            revenue,
-            revenueByMonth: paymentsRes?.data || undefined,
-            bookingsByMonth: undefined,
-          });
-        }
+        const analyticsData = analyticsResponse?.analytics as AnalyticsShape | undefined;
+        setAnalytics({
+          totalUsers: analyticsData?.totalUsers ?? 0,
+          totalProperties: analyticsData?.totalProperties ?? (propertiesPayload?.properties?.length ?? 0),
+          totalBookings: analyticsData?.totalBookings ?? 0,
+          revenue,
+          revenueByMonth: revenueByMonth.length ? revenueByMonth : undefined,
+          bookingsByMonth: analyticsData?.bookingsByMonth,
+        });
 
-        const propertiesPayload: any = await propertiesApi
-          .list({ page: 1, limit: 100 })
-          .catch(() => null);
         const allProperties = (propertiesPayload?.properties || []) as any[];
         setTopProperties(
           allProperties
@@ -194,9 +202,9 @@ export default function AdminAnalytics() {
       {
         id: 'revenue',
         label: 'Gross revenue',
-        value: `Tsh ${formatPrice(source.revenue || 0)}`,
+        value: `TZS ${formatPrice(source.revenue || 0)}`,
         icon: DollarSign,
-        description: 'Aggregate revenue from payments',
+        description: 'Revenue from successful payments only',
         gradient: 'from-amber-500 to-amber-600',
       },
     ];
@@ -207,13 +215,13 @@ export default function AdminAnalytics() {
     if (Array.isArray(entries) && entries.length) {
       return entries.map((item, idx) => ({
         month: formatMonthLabel(item.month, idx),
-        amount: Number(item.amount || 0),
+        amount: Number(item.amount ?? item.revenue ?? 0),
       }));
     }
 
-    return buildMonthlyFallback().map((item, idx) => ({
+    return buildMonthlyFallback().map((item) => ({
       month: item.label,
-      amount: Math.max(0, (analytics?.revenue || 0) / 6 + idx * 1500),
+      amount: 0,
     }));
   }, [analytics]);
 
@@ -274,7 +282,7 @@ export default function AdminAnalytics() {
                 <div className="mt-4 grid gap-3 text-sm">
                   <div className="flex items-center justify-between text-white/90">
                     <span>Revenue (YTD)</span>
-                    <span className="font-semibold">Tsh {formatPrice(analytics?.revenue || 0)}</span>
+                    <span className="font-semibold">TZS {formatPrice(analytics?.revenue || 0)}</span>
                   </div>
                   <div className="flex items-center justify-between text-white/90">
                     <span>Bookings</span>
@@ -319,7 +327,7 @@ export default function AdminAnalytics() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Revenue performance</h2>
-                  <p className="text-sm text-gray-500">Monthly totals sourced from payment events.</p>
+                  <p className="text-sm text-gray-500">Monthly totals from successful payments only.</p>
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-light-blue-50 px-3 py-1 text-xs font-medium text-dark-blue-500">
                   <TrendingUp className="h-4 w-4" />
@@ -335,7 +343,7 @@ export default function AdminAnalytics() {
                       stroke="#6b7280"
                       tick={{ fill: '#6b7280' }}
                       tickFormatter={(value) =>
-                        value >= 1000 ? `Tsh ${(value / 1000).toFixed(1)}k` : `Tsh ${value}`
+                        value >= 1000 ? `TZS ${(value / 1000).toFixed(1)}k` : `TZS ${value}`
                       }
                     />
                     <Tooltip
@@ -346,7 +354,7 @@ export default function AdminAnalytics() {
                         borderRadius: '12px',
                         boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)',
                       }}
-                      formatter={(value: any) => `Tsh ${formatPrice(Number(value || 0))}`}
+                      formatter={(value: any) => `TZS ${formatPrice(Number(value || 0))}`}
                     />
                     <Legend />
                     <Bar dataKey="amount" name="Revenue" fill="#3b82f6" radius={[10, 10, 0, 0]} />
@@ -441,7 +449,7 @@ export default function AdminAnalytics() {
                         </div>
                         <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-light-blue-50 px-3 py-1 text-[11px] font-medium text-dark-blue-500">
                           <DollarSign className="h-3 w-3" />
-                          Tsh {formatPrice(property.price || 0)}
+                          TZS {formatPrice(property.price || 0)}
                         </div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-500">

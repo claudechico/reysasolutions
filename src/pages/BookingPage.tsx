@@ -41,7 +41,12 @@ export default function BookingPage() {
       try {
         setCheckingPayment(true);
         const res = await paymentsApi.checkSubscription();
-        const paid = res?.isPaid || (user as any).isPaidUser || false;
+        // Handle both new response structure (data.subscription) and legacy (isPaid)
+        const paid = res?.data?.subscription?.hasActiveSubscription || 
+                     res?.data?.subscription?.isPaidUser || 
+                     res?.isPaid || 
+                     (user as any).isPaidUser || 
+                     false;
         setIsPaid(paid);
         if (!paid) {
           setError('You need to make a payment before making bookings. Please subscribe to continue.');

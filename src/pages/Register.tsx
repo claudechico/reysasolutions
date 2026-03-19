@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, AlertCircle, Phone, Building2, UserCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function Register() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<'agent' | 'owner' | ''>('');
+  const [role, setRole] = useState<'agent' | 'owner' | 'customer' | ''>('customer');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ export default function Register() {
 
     setLoading(true);
 
-    // Role must be either "agent" or "owner". If not provided, send undefined/null 
+    // Role must be either "agent" or "owner". If "customer" or empty, send undefined/null 
     // so backend defaults to "users"
     const finalRole = role === 'agent' || role === 'owner' ? role : undefined;
 
@@ -46,7 +47,7 @@ export default function Register() {
     });
 
     if (error) {
-      setError(typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error));
+      setError(getFriendlyErrorMessage(error, 'Registration failed. Please check your input and try again.'));
       setLoading(false);
     } else {
       navigate('/verify-otp');
@@ -152,10 +153,10 @@ export default function Register() {
                   </div>
                   <select
                     value={role}
-                    onChange={e => setRole(e.target.value as 'agent' | 'owner' | '')}
+                    onChange={e => setRole(e.target.value as 'agent' | 'owner' | 'customer' | '')}
                     className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-light-blue-500 focus:border-light-blue-500 outline-none transition-all duration-200 bg-gray-50 hover:bg-white appearance-none cursor-pointer"
                   >
-                    <option value="">Select Account Type (defaults to users)</option>
+                    <option value="customer">Customer (default)</option>
                     <option value="agent">{t('register.agent')}</option>
                     <option value="owner">{t('register.owner')}</option>
                   </select>
@@ -165,7 +166,7 @@ export default function Register() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2 ml-1">If not selected, will default to "users"</p>
+                <p className="text-xs text-gray-500 mt-2 ml-1">Customer account type (role: users)</p>
               </div>
 
               {/* Password */}

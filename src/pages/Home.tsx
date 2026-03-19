@@ -125,37 +125,30 @@ export default function Home() {
   const loadProperties = async () => {
     try {
       const res = await propertiesApi.list({ page: 1, limit: 4 });
-      console.log('[Home] API response:', res);
+      if (import.meta.env.DEV) {
+        console.log('[Home] API response:', res);
+        console.log('[Home] All properties received:', res?.properties?.length || 0);
+      }
       if (res?.properties) {
-        // Log each property's status-related fields for debugging
-        console.log('[Home] All properties received:', res.properties.length);
-        res.properties.forEach((property: any, index: number) => {
-          console.log(`[Home] Property ${index + 1}:`, {
-            id: property.id,
-            title: property.title,
-            status: property.status,
-            listing_type: property.listing_type,
-            moderationStatus: property.moderationStatus,
-            is_approved: property.is_approved,
-            fullProperty: property
-          });
-        });
-        
         // Filter to show only approved properties (moderationStatus === 'approved')
         const approvedProperties = res.properties.filter((property: PropertyDto & { moderationStatus?: string }) => {
           const moderationStatus = property?.moderationStatus;
           // Only show properties with moderationStatus === 'approved'
           return moderationStatus && String(moderationStatus).toLowerCase() === 'approved';
         });
-        console.log('[Home] Approved properties after filtering:', approvedProperties.length);
+        if (import.meta.env.DEV) {
+          console.log('[Home] Approved properties after filtering:', approvedProperties.length);
+        }
         setProperties(approvedProperties);
       }
     } catch (err) {
-      console.error('Failed to load properties', err);
-      // Connection refused usually means backend is not running
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_CONNECTION_REFUSED')) {
-        console.warn('Backend API server appears to be unavailable. Make sure the backend is running on port 5558.');
+      if (import.meta.env.DEV) {
+        console.error('Failed to load properties', err);
+        // Connection refused usually means backend is not running
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_CONNECTION_REFUSED')) {
+          console.warn('Backend API server appears to be unavailable. Make sure the backend is running on port 5558.');
+        }
       }
     }
   };
@@ -165,11 +158,13 @@ export default function Home() {
       const res = await categoriesApi.list();
       if (res?.categories) setCategories(res.categories);
     } catch (err) {
-      console.error('Failed to load categories', err);
-      // Connection refused usually means backend is not running
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_CONNECTION_REFUSED')) {
-        console.warn('Backend API server appears to be unavailable. Make sure the backend is running on port 5558.');
+      if (import.meta.env.DEV) {
+        console.error('Failed to load categories', err);
+        // Connection refused usually means backend is not running
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_CONNECTION_REFUSED')) {
+          console.warn('Backend API server appears to be unavailable. Make sure the backend is running on port 5558.');
+        }
       }
     }
   };
@@ -191,14 +186,18 @@ export default function Home() {
           propertiesCount = Number(propsRes.total);
         }
       } catch (e) {
-        console.error('Failed to load property count', e);
+        if (import.meta.env.DEV) {
+          console.error('Failed to load property count', e);
+        }
       }
 
       // Count users (clients) from backend table using public count endpoint (no auth required)
       let clientsCount = 0;
       try {
         const clientsRes = await usersApi.count({ role: 'users' }).catch((e) => {
-          console.warn('Failed to load clients count:', e);
+          if (import.meta.env.DEV) {
+            console.warn('Failed to load clients count:', e);
+          }
           return null;
         });
         // Backend returns 'count' not 'total'
@@ -206,7 +205,9 @@ export default function Home() {
           clientsCount = Number(clientsRes.count);
         }
       } catch (e) {
-        console.error('Failed to load clients count', e);
+        if (import.meta.env.DEV) {
+          console.error('Failed to load clients count', e);
+        }
         clientsCount = 0;
       }
 
@@ -215,21 +216,27 @@ export default function Home() {
       try {
         // Count owners
         const ownersRes = await usersApi.count({ role: 'owner' }).catch((e) => {
-          console.warn('Failed to load owners count:', e);
+          if (import.meta.env.DEV) {
+            console.warn('Failed to load owners count:', e);
+          }
           return null;
         });
         const ownersCount = ownersRes?.count !== undefined ? Number(ownersRes.count) : 0;
 
         // Count agents
         const agentsRes = await usersApi.count({ role: 'agent' }).catch((e) => {
-          console.warn('Failed to load agents count:', e);
+          if (import.meta.env.DEV) {
+            console.warn('Failed to load agents count:', e);
+          }
           return null;
         });
         const agentsRoleCount = agentsRes?.count !== undefined ? Number(agentsRes.count) : 0;
 
         agentsCount = ownersCount + agentsRoleCount;
       } catch (e) {
-        console.error('Failed to load agents count', e);
+        if (import.meta.env.DEV) {
+          console.error('Failed to load agents count', e);
+        }
         agentsCount = 0;
       }
 
@@ -241,7 +248,9 @@ export default function Home() {
         yearsExperience: '15+'
       });
     } catch (err) {
-      console.error('Failed to load statistics', err);
+      if (import.meta.env.DEV) {
+        console.error('Failed to load statistics', err);
+      }
     }
   };
 
