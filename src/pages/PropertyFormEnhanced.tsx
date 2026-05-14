@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { propertiesApi, propertiesApiExtended, paymentsApi } from '../lib/api';
+import { propertiesApi, propertiesApiExtended } from '../lib/api';
 import { categoriesApi } from '../lib/api';
-import { Save, ArrowLeft, X, Plus, CreditCard } from 'lucide-react';
+import { Save, ArrowLeft, X, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getFriendlyErrorMessage } from '../lib/errorUtils';
 
@@ -20,8 +20,6 @@ export default function PropertyFormEnhanced() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isPaid, setIsPaid] = useState<boolean | null>(null);
-  const [checkingPayment, setCheckingPayment] = useState(true);
   const [mediaFiles, setMediaFiles] = useState<{ type: string; url: string; alt?: string }[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -63,32 +61,6 @@ export default function PropertyFormEnhanced() {
       navigate('/dashboard');
       return;
     }
-
-    // Check payment status for agents/owners
-    (async () => {
-      try {
-        setCheckingPayment(true);
-        const res = await paymentsApi.checkSubscription();
-        // Handle both new response structure (data.subscription) and legacy (isPaid)
-        const paid = res?.data?.subscription?.hasActiveSubscription || 
-                     res?.data?.subscription?.isPaidUser || 
-                     res?.isPaid || 
-                     (user as any).isPaidUser || 
-                     false;
-        setIsPaid(paid);
-        if (!paid && id === 'new') {
-          setError('You need to make a payment before creating properties. Please subscribe to continue.');
-        }
-      } catch (err) {
-        // If check fails, use user's isPaidUser field as fallback
-        setIsPaid((user as any).isPaidUser || false);
-        if (!(user as any).isPaidUser && id === 'new') {
-          setError('You need to make a payment before creating properties. Please subscribe to continue.');
-        }
-      } finally {
-        setCheckingPayment(false);
-      }
-    })();
 
     if (id && id !== 'new') {
       loadProperty();
@@ -153,19 +125,6 @@ export default function PropertyFormEnhanced() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Check payment status before submitting
-    if (id === 'new') {
-      const userRole = String((user as any).role || '').toLowerCase();
-      if (userRole !== 'users') {
-        // For agents/owners, check payment
-        const paid = isPaid || (user as any).isPaidUser || false;
-        if (!paid) {
-          setError('You need to make a payment before creating properties. Please subscribe to continue.');
-          return;
-        }
-      }
-    }
     
     setLoading(true);
 
@@ -366,38 +325,13 @@ export default function PropertyFormEnhanced() {
           </p>
           </div>
 
-          {checkingPayment ? (
-            <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
-              <p className="text-blue-800 text-sm font-medium">Checking payment status...</p>
-            </div>
-          ) : !isPaid && id === 'new' ? (
-            <div className="mb-6 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-6 shadow-lg">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <CreditCard className="w-8 h-8 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-orange-900 mb-2">Payment Required</h3>
-                  <p className="text-orange-800 text-sm mb-4">
-                    You need to make a payment before creating properties. Please subscribe to continue.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/subscriptions')}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2.5 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md font-medium"
-                  >
-                    Go to Subscriptions
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : error ? (
+          {error ? (
             <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 shadow-sm">
               <p className="text-red-800 text-sm font-medium">{error}</p>
             </div>
           ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-10" style={{ pointerEvents: !isPaid && id === 'new' ? 'none' : 'auto', opacity: !isPaid && id === 'new' ? 0.6 : 1 }}>
+          <form onSubmit={handleSubmit} className="space-y-10">
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
                 <span className="w-1 h-8 bg-gradient-to-b from-dark-blue-500 to-indigo-600 rounded-full mr-3"></span>

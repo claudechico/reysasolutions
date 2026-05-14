@@ -317,6 +317,16 @@ export const usersApi = {
 	getProfile: () => request<{ id: string | number; name: string; email: string; phoneNumber?: string; role?: string; isVerified?: boolean }>(`/users/profile`),
 	updateProfile: (payload: { name?: string; email?: string; phoneNumber?: string }) =>
 		request(`/users/profile`, { method: 'PATCH', body: JSON.stringify(payload) }),
+	// Request account deletion (admin approval required).
+	// Reuses the backend route `DELETE /api/v1/users/profile` but now creates a deletion request instead of deleting immediately.
+	requestAccountDeletion: (payload?: { reason?: string }) =>
+		request<{ success: boolean; message: string; request: any }>(`/users/profile`, {
+			method: 'DELETE',
+			body: JSON.stringify({ reason: payload?.reason ?? null }),
+		}),
+	// Get latest account deletion request for the authenticated user.
+	getDeletionRequest: () =>
+		request<{ success: boolean; request: any | null }>(`/users/deletion-request`),
 	// Admin endpoints
 	list: (params?: { page?: number; limit?: number }) =>
 		request<{ success: boolean; users: BackendUser[] }>(`/users${params ? `?${new URLSearchParams(Object.entries(params).reduce((a, [k,v]) => (v!=null ? (a[k]=String(v), a) : a), {} as Record<string,string>))}` : ''}`),
@@ -361,6 +371,23 @@ export const adminUsersApi = {
 	count: (params?: { role?: string }) =>
 		publicRequest<{ success: boolean; total: number }>(
 			`/admin/users/count${params?.role ? `?role=${encodeURIComponent(params.role)}` : ''}`
+		),
+};
+
+export const adminAccountDeletionRequestsApi = {
+	list: (params?: { status?: string }) =>
+		request<{ success: boolean; requests: any[] }>(
+			`/admin/account-deletion-requests${params?.status ? `?status=${encodeURIComponent(params.status)}` : '?status=pending'}`
+		),
+	approve: (id: string | number, payload?: { note?: string }) =>
+		request<{ success: boolean; message: string; requestId?: string | number }>(
+			`/admin/account-deletion-requests/${id}/approve`,
+			{ method: 'POST', body: JSON.stringify({ note: payload?.note ?? null }) }
+		),
+	decline: (id: string | number, payload?: { note?: string }) =>
+		request<{ success: boolean; message: string; requestId?: string | number }>(
+			`/admin/account-deletion-requests/${id}/decline`,
+			{ method: 'POST', body: JSON.stringify({ note: payload?.note ?? null }) }
 		),
 };
 

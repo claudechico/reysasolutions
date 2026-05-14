@@ -188,20 +188,6 @@ export default function Navbar() {
                 {t('nav.auctions')}
                 {isActive('/auctions') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
               </Link>
-              {/* Show Subscriptions link only to non-admin users */}
-              {role !== 'admin' && (
-                <Link 
-                  to="/subscriptions" 
-                  className={`px-4 py-2 rounded-lg transition-all font-medium text-sm relative ${
-                    isActive('/subscriptions') 
-                      ? 'text-dark-blue-600 bg-gradient-to-r from-light-blue-50 to-blue-50 shadow-sm' 
-                      : 'text-gray-700 hover:text-dark-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {t('nav.subscriptions')}
-                  {isActive('/subscriptions') && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-light-blue-500 to-dark-blue-600 rounded-full"></span>}
-                </Link>
-              )}
             </div>
 
             <div className="hidden md:flex items-center space-x-3 pr-2 sm:pr-4 lg:pr-6">
@@ -337,19 +323,6 @@ export default function Navbar() {
               >
                 {t('nav.auctions')}
               </Link>
-              {role !== 'admin' && (
-                <Link 
-                  to="/subscriptions" 
-                  onClick={() => setMobileMenuOpen(false)} 
-                  className={`block px-4 py-2.5 rounded-lg transition font-medium ${
-                    isActive('/subscriptions') 
-                      ? 'bg-light-blue-50 text-dark-blue-600' 
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {t('nav.subscriptions')}
-                </Link>
-              )}
 
               {user ? (
                 <>

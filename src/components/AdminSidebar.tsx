@@ -51,6 +51,7 @@ export default function AdminSidebar() {
   const menuItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/users', label: 'Users', icon: Users },
+    { path: '/admin/account-deletion-requests', label: 'Account Deletion Requests', icon: Shield },
     { path: '/admin/properties', label: 'Properties', icon: Building2 },
     { path: '/admin/categories', label: 'Categories', icon: Tag },
     { path: '/admin/advertisements/new', label: 'Advertisements', icon: Megaphone },

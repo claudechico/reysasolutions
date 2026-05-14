@@ -28,6 +28,7 @@ export default function Profile() {
   const [isPaid, setIsPaid] = useState<boolean | null>(null);
   const [daysRemaining, setDaysRemaining] = useState<number | null>(null);
   const [checkingPayment, setCheckingPayment] = useState(false);
+  const [deletionRequest, setDeletionRequest] = useState<any | null>(null);
   
   // Statistics
   const [stats, setStats] = useState({
@@ -61,6 +62,15 @@ export default function Profile() {
       });
       setEmailVerified(!!me.isVerified || !!me.emailVerified);
       setPhoneVerified(!!me.phoneNumberVerified || !!me.phoneVerified || !!me.phone_verified);
+
+      // Load account deletion request status (admin approval flow)
+      try {
+        const delRes = await usersApi.getDeletionRequest();
+        setDeletionRequest(delRes?.request ?? null);
+      } catch {
+        // Keep profile page usable even if deletion request status fails
+        setDeletionRequest(null);
+      }
 
       // Check payment status
       try {
@@ -592,6 +602,70 @@ export default function Profile() {
                     <KeyRound className="w-4 h-4" />
                     <span>{t('profile.changePassword')}</span>
                   </button>
+
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h4 className="text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <span>Account Deletion</span>
+                    </h4>
+
+                    {deletionRequest ? (
+                      <div className="space-y-3">
+                        {String(deletionRequest.status).toLowerCase() === 'pending' && (
+                          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center space-x-2">
+                            <Clock className="w-5 h-5" />
+                            <div>
+                              <div className="font-medium">{t('profile.waitingForApproval')}</div>
+                              <div className="text-sm opacity-90">Admin will review your request.</div>
+                            </div>
+                          </div>
+                        )}
+
+                        {String(deletionRequest.status).toLowerCase() === 'declined' && (
+                          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center space-x-2">
+                            <XCircle className="w-5 h-5" />
+                            <div>
+                              <div className="font-medium">{t('profile.rejected')}</div>
+                              <div className="text-sm opacity-90">You can submit a new request.</div>
+                            </div>
+                          </div>
+                        )}
+
+                        {String(deletionRequest.status).toLowerCase() === 'approved' && (
+                          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center space-x-2">
+                            <CheckCircle className="w-5 h-5" />
+                            <div>
+                              <div className="font-medium">{t('profile.approved')}</div>
+                              <div className="text-sm opacity-90">Your account will be deleted.</div>
+                            </div>
+                          </div>
+                        )}
+
+                        {deletionRequest.reason && (
+                          <div className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                            <div className="font-medium text-gray-900 mb-1">Reason</div>
+                            <div className="whitespace-pre-wrap">{deletionRequest.reason}</div>
+                          </div>
+                        )}
+
+                        {String(deletionRequest.status).toLowerCase() === 'declined' && (
+                          <button
+                            onClick={() => navigate('/delete-account-request')}
+                            className="w-full bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 text-white px-6 py-3 rounded-lg hover:from-dark-blue-600 hover:to-dark-blue-700 transition flex items-center justify-center space-x-2"
+                          >
+                            <span>Request again</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-red-700 transition disabled:opacity-50 flex items-center justify-center space-x-2"
+                        onClick={() => navigate('/delete-account-request')}
+                      >
+                        <span>Request account deletion</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

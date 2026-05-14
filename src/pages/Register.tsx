@@ -17,10 +17,16 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<'agent' | 'owner' | 'customer' | ''>('customer');
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!acceptedPrivacy) {
+      setError('Please read and accept the Privacy Policy before registering.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -206,9 +212,30 @@ export default function Register() {
               </div>
 
               {/* Submit Button */}
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="mt-1 h-5 w-5 rounded border-gray-300 text-dark-blue-500 focus:ring-dark-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    I have read and agree to the{' '}
+                    <Link
+                      to="/privacy-policy"
+                      className="text-dark-blue-500 hover:text-dark-blue-600 font-semibold hover:underline"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !acceptedPrivacy}
                 className="w-full bg-gradient-to-r from-dark-blue-500 via-dark-blue-600 to-dark-blue-600 text-white px-8 py-4 rounded-xl hover:from-dark-blue-600 hover:via-dark-blue-700 hover:to-dark-blue-700 transition-all duration-300 shadow-lg shadow-dark-blue-500/30 hover:shadow-xl hover:shadow-dark-blue-500/40 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center space-x-2 transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (

@@ -29,7 +29,11 @@ import AdminProfile from './pages/AdminProfile';
 import AdminCMS from './pages/AdminCMS';
 import AdminModeration from './pages/AdminModeration';
 import AdminBookings from './pages/AdminBookings';
+import AdminAccountDeletionRequests from './pages/AdminAccountDeletionRequests';
 import Profile from './pages/Profile';
+import DeleteAccountInfo from './pages/DeleteAccountInfo';
+import AMA_Delete_Request_Page from './pages/AMA_Delete_Request_Page';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Payment from './pages/Payment';
 import Subscriptions from './pages/Subscriptions';
 import ForgotPassword from './pages/ForgotPassword';
@@ -71,6 +75,14 @@ function InnerApp() {
               <Route path="/auctions/:id" element={<AuctionDetail />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/delete-info/*" element={<DeleteAccountInfo />} />
+              <Route path="/delete-account/*" element={<DeleteAccountInfo />} />
+              <Route
+                path="/delete-account-request"
+                element={<AMA_Delete_Request_Page />}
+              />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route
@@ -244,6 +256,10 @@ function InnerApp() {
               <Route
                 path="/admin/moderation"
                 element={<AdminProtectedRoute><AdminModeration /></AdminProtectedRoute>}
+              />
+              <Route
+                path="/admin/account-deletion-requests"
+                element={<AdminProtectedRoute><AdminAccountDeletionRequests /></AdminProtectedRoute>}
               />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp" element={<VerifyOTP />} />
